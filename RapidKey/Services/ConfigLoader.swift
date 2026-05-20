@@ -107,30 +107,10 @@ enum ConfigLoader {
 
     /// US QWERTY virtual key codes (same as `RegisterEventHotKey` / `NSEvent.keyCode`).
     private static func keyCodeForToken(_ token: String) throws -> UInt32 {
-        if token.count == 1, let ch = token.first {
-            if let vk = PhysicalUSKeyMap.charToVK[ch] { return vk }
+        guard let vk = PhysicalUSKeyMap.keyCode(for: token) else {
             throw HotkeyParseError.unknownKey(token)
         }
-
-        switch token {
-        case "space": return 0x31 // kVK_Space
-        case "tab": return 0x30
-        case "return", "enter": return 0x24
-        case "escape", "esc": return 0x35
-        case "f1": return 0x7A
-        case "f2": return 0x78
-        case "f3": return 0x63
-        case "f4": return 0x76
-        case "f5": return 0x60
-        case "f6": return 0x61
-        case "f7": return 0x62
-        case "f8": return 0x64
-        case "f9": return 0x65
-        case "f10": return 0x6D
-        case "f11": return 0x67
-        case "f12": return 0x6F
-        default: throw HotkeyParseError.unknownKey(token)
-        }
+        return vk
     }
 
     private static func parseSequenceKey(_ key: String) -> [String] {
@@ -138,7 +118,7 @@ enum ConfigLoader {
             .split(whereSeparator: { $0.isWhitespace })
             .map(String.init)
             .filter { !$0.isEmpty }
-            .map { $0.count == 1 ? $0 : $0.lowercased() }
+            .map { PhysicalUSKeyMap.normalizeBindingToken($0) }
     }
 
     /// If `path` is a key in `allPaths`, drop any longer path that has `path` as a strict prefix (leaf wins).
@@ -164,6 +144,17 @@ enum ConfigLoader {
         for (key, value) in table {
             let seq = parseSequenceKey(key)
             guard !seq.isEmpty else { continue }
+
+            for token in seq {
+                guard PhysicalUSKeyMap.isKnownToken(token) else {
+                    let ln = lineForKeyAssignment(key, in: source)
+                    throw makeError(
+                        code: 8,
+                        detail: "Binding \"\(key)\": unknown key token \"\(token)\".",
+                        line: ln
+                    )
+                }
+            }
 
             guard value.type == .table, let inner = value.table else {
                 let ln = lineForKeyAssignment(key, in: source)

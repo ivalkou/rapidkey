@@ -142,6 +142,7 @@ final class CommandPaletteState: ObservableObject {
     }
 
     func handle(_ key: String) -> Bool {
+        let key = PhysicalUSKeyMap.normalizeBindingToken(key)
         if key == "escape" {
             cancelIdleTimer()
             onDismiss?(true, false)

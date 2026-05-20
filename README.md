@@ -95,7 +95,9 @@ Config file: `~/.config/rapidkey/rapidkey.toml`
 leader = "alt+space"
 ```
 
-Modifiers: `ctrl`, `alt`, `cmd`, `shift`. Keys: `a`–`z`, `0`–`9`, `space`, `tab`, `enter`, `esc`, `f1`–`f12`.
+Modifiers: `ctrl`, `alt`, `cmd`, `shift`. Keys: `a`–`z`, `A`–`Z`, `0`–`9`, punctuation (`= - [ ] ' ; \ , / . \``), Shift symbols (`! @ # $ % ^ & * ( ) _ + { } | : " < > ? ~`), and `space`, `tab`, `enter`, `esc`, `f1`–`f12`.
+
+Keys refer to **physical US QWERTY positions**, not the character printed by your current keyboard layout.
 
 **Double-tap modifier** — tap the same modifier twice within the configured window:
 
@@ -117,6 +119,8 @@ Also accepts `doubletap+alt`, `doubletap+cmd`, `doubletap+shift` (alias: `2tap+�
 ### Bindings
 
 Keys in a sequence are space-separated. For example, `"f h"` means press `f`, then `h`.
+
+Supported keys match the leader list above: letters, digits, punctuation, and Shift symbols (e.g. `!` for Shift+`1`). In TOML, quote keys that are special to the parser — for example `"1"`, `"!"`, `"["`, or `"g \""` for a two-key sequence ending with `"`.
 
 Each binding is an inline table with:
 
@@ -145,6 +149,8 @@ double_tap_cooldown_ms = 500
 
 [bindings]
 "t"   = { title = "Terminal", open = "Terminal" }
+"1"   = { title = "Calculator", open = "Calculator" }
+"!"   = { title = "Notes", open = "Notes" }
 "f h" = { title = "Home", run = "open ~" }
 "f l" = { title = "List Home", run = "ls ~", show_output = true }
 "w g" = { title = "Google", url = "https://www.google.com" }

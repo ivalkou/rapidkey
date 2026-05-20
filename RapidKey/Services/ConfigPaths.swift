@@ -17,8 +17,11 @@ enum ConfigPaths {
 # Global shortcut to open the command palette.
 #
 # Variants:
-#   chord:               "alt+space"        modifiers: ctrl|alt|cmd|shift; key: a-z, 0-9,
+#   chord:               "alt+space"        modifiers: ctrl|alt|cmd|shift; key: a-z, A-Z, 0-9,
+#                                           punctuation (= - [ ] ' ; \ , / . `),
+#                                           Shift symbols (! @ # $ % ^ & * ( ) _ + { } | : " < > ? ~),
 #                                           space, tab, enter, esc, f1-f12.
+#                                           Keys are US QWERTY physical positions.
 #                                           No extra permissions required.
 #
 #   double-tap modifier: "doubletap+ctrl" | "doubletap+alt"
@@ -62,6 +65,7 @@ double_tap_cooldown_ms = 500
 "x" = "RapidKey Config"
 
 # Key sequences and actions. Keys are space-separated (e.g. "f h" = press f, then h).
+# Quote TOML keys that need it: "1", "!", "[", "g \"".
 # Each binding is an inline table with:
 #   title       — label in the palette (required)
 #   run         — shell command via configured shell -c (exactly one of run | open | url)
@@ -73,7 +77,10 @@ double_tap_cooldown_ms = 500
 # Root-level leaf: one key runs the action immediately.
 "t" = { title = "Terminal", open = "Terminal" }
 "s" = { title = "Safari",   open = "Safari" }
-……
+# Examples with digits / Shift symbols (quote keys in TOML):
+# "1" = { title = "Calculator", open = "Calculator" }
+# "!" = { title = "Notes",      open = "Notes" }
+
 # Group "f" — shell commands (run).
 "f h" = { title = "Home",      run = "open ~" }
 "f d" = { title = "Downloads", run = "open ~/Downloads" }

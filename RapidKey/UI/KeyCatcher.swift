@@ -33,10 +33,12 @@ final class KeyView: NSView {
             // Unmapped keys: swallow so IME/layout does not insert text into the panel.
             return
         }
-        if event.modifierFlags.contains(.shift),
-           token.count == 1,
-           let ch = token.first, ch.isLetter {
-            token = token.uppercased()
+        if event.modifierFlags.contains(.shift) {
+            if token.count == 1, let ch = token.first, ch.isLetter {
+                token = token.uppercased()
+            } else if let shifted = PhysicalUSKeyMap.shiftedToken(for: token) {
+                token = shifted
+            }
         }
         onKey?(token)
     }
