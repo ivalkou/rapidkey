@@ -29,7 +29,9 @@ enum ConfigPaths {
 #                                           is active; until granted, the leader will NOT fire.
 #                                           Use the menu bar item "Grant Input Monitoring..."
 #                                           to show the dialog again.
-#                                           Tap interval: [behavior] double_tap_ms (default 350).
+#                                           Tap timing: [behavior] double_tap_ms (max gap, default 350),
+#                                           double_tap_min_ms (debounce, default 80),
+#                                           double_tap_cooldown_ms (after trigger, default 500).
 leader = "alt+space"
 
 # Shell for run commands (default sh). Name on PATH or absolute path.
@@ -44,9 +46,13 @@ position = "center"   # center | cursor | top | bottom
 
 # Auto-close the palette after idle time (milliseconds). 0 = never auto-close.
 # double_tap_ms: max gap between modifier taps for doubletap+ leader (default 350).
+# double_tap_min_ms: min gap; shorter pairs are ignored as bounce (default 80).
+# double_tap_cooldown_ms: ignore new double-taps after a trigger (default 500).
 [behavior]
 timeout_ms = 0
 double_tap_ms = 350
+double_tap_min_ms = 80
+double_tap_cooldown_ms = 500
 
 # Optional section titles for key prefixes (shown in the palette header).
 # A group key must have bindings under that prefix (e.g. "f" needs "f h", "f d", …).

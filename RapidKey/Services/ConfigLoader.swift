@@ -346,6 +346,32 @@ enum ConfigLoader {
         return panel
     }
 
+    private static func parsePositiveBehaviorMs(
+        _ conv: TOMLValueConvertible,
+        key: String,
+        source: String,
+        invalidTypeCode: Int,
+        nonPositiveCode: Int
+    ) throws -> TimeInterval {
+        guard conv.type == .int, let ms = conv.int else {
+            let ln = lineForKeyAssignment(key, in: source)
+            throw makeError(
+                code: invalidTypeCode,
+                detail: "In [behavior], \(key) must be an integer (milliseconds).",
+                line: ln ?? lineForTableHeader("[behavior]", in: source)
+            )
+        }
+        guard ms > 0 else {
+            let ln = lineForKeyAssignment(key, in: source)
+            throw makeError(
+                code: nonPositiveCode,
+                detail: "\(key) must be greater than 0.",
+                line: ln
+            )
+        }
+        return TimeInterval(ms) / 1000.0
+    }
+
     private static func parseBehaviorTable(_ table: TOMLTable, source: String) throws -> BehaviorConfig {
         var behavior = BehaviorConfig()
         if let conv = table["timeout_ms"] {
@@ -368,23 +394,40 @@ enum ConfigLoader {
             behavior.idleTimeout = ms == 0 ? nil : TimeInterval(ms) / 1000.0
         }
         if let conv = table["double_tap_ms"] {
-            guard conv.type == .int, let ms = conv.int else {
-                let ln = lineForKeyAssignment("double_tap_ms", in: source)
-                throw makeError(
-                    code: 48,
-                    detail: "In [behavior], double_tap_ms must be an integer (milliseconds).",
-                    line: ln ?? lineForTableHeader("[behavior]", in: source)
-                )
-            }
-            guard ms > 0 else {
-                let ln = lineForKeyAssignment("double_tap_ms", in: source)
-                throw makeError(
-                    code: 49,
-                    detail: "double_tap_ms must be greater than 0.",
-                    line: ln
-                )
-            }
-            behavior.doubleTapWindow = TimeInterval(ms) / 1000.0
+            behavior.doubleTapWindow = try parsePositiveBehaviorMs(
+                conv,
+                key: "double_tap_ms",
+                source: source,
+                invalidTypeCode: 48,
+                nonPositiveCode: 49
+            )
+        }
+        if let conv = table["double_tap_min_ms"] {
+            behavior.doubleTapMinGap = try parsePositiveBehaviorMs(
+                conv,
+                key: "double_tap_min_ms",
+                source: source,
+                invalidTypeCode: 50,
+                nonPositiveCode: 51
+            )
+        }
+        if let conv = table["double_tap_cooldown_ms"] {
+            behavior.doubleTapCooldown = try parsePositiveBehaviorMs(
+                conv,
+                key: "double_tap_cooldown_ms",
+                source: source,
+                invalidTypeCode: 52,
+                nonPositiveCode: 53
+            )
+        }
+        if behavior.doubleTapMinGap > behavior.doubleTapWindow {
+            let ln = lineForKeyAssignment("double_tap_min_ms", in: source)
+                ?? lineForKeyAssignment("double_tap_ms", in: source)
+            throw makeError(
+                code: 54,
+                detail: "double_tap_min_ms cannot be greater than double_tap_ms.",
+                line: ln
+            )
         }
         return behavior
     }

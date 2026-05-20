@@ -110,7 +110,7 @@ Also accepts `doubletap+alt`, `doubletap+cmd`, `doubletap+shift` (alias: `2tap+�
 | Section | Purpose |
 |---------|---------|
 | `[panel]` | Where the palette appears: `center`, `cursor`, `top`, `bottom` |
-| `[behavior]` | `timeout_ms` — auto-close after idle (0 = disabled); `double_tap_ms` — max gap between modifier taps (default 350) |
+| `[behavior]` | `timeout_ms` — auto-close after idle (0 = disabled); `double_tap_ms` — max gap between modifier taps (default 350); `double_tap_min_ms` — min gap, shorter pairs ignored as bounce (default 80); `double_tap_cooldown_ms` — ignore new double-taps after a trigger (default 500) |
 | `[groups]` | Optional titles for key prefixes (shown in the palette header) |
 | `[bindings]` | Key sequences and their actions |
 
@@ -136,6 +136,8 @@ position = "center"
 [behavior]
 timeout_ms = 0
 double_tap_ms = 350
+double_tap_min_ms = 80
+double_tap_cooldown_ms = 500
 
 [groups]
 "f" = "Files"

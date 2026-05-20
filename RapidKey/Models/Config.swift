@@ -16,6 +16,10 @@ struct BehaviorConfig: Equatable {
     var idleTimeout: TimeInterval? = nil
     /// Max gap between two modifier taps when using a `doubletap+` leader.
     var doubleTapWindow: TimeInterval = 0.35
+    /// Min gap between taps; shorter gaps are treated as key bounce.
+    var doubleTapMinGap: TimeInterval = 0.08
+    /// Ignore new double-taps for this long after a successful trigger.
+    var doubleTapCooldown: TimeInterval = 0.5
 }
 
 struct Config: Equatable {

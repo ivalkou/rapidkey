@@ -2,21 +2,31 @@ import AppKit
 
 final class DoubleTapModifierMonitor {
     private var tapWindow: TimeInterval = 0.35
+    private var minGap: TimeInterval = 0.08
+    private var cooldown: TimeInterval = 0.5
 
     private var globalMonitor: Any?
     private var localMonitor: Any?
     private var target: LeaderModifier?
     private var armedForRelease = false
     private var lastTapTime: TimeInterval?
+    private var lastFireTime: TimeInterval?
 
     var onLeader: () -> Void = {}
 
     /// `true` when the global event monitor was created (Input Monitoring is effective).
     var hasGlobalAccess: Bool { globalMonitor != nil }
 
-    func start(modifier: LeaderModifier, tapWindow: TimeInterval) {
+    func start(
+        modifier: LeaderModifier,
+        tapWindow: TimeInterval,
+        minGap: TimeInterval,
+        cooldown: TimeInterval
+    ) {
         stop()
         self.tapWindow = tapWindow
+        self.minGap = minGap
+        self.cooldown = cooldown
         target = modifier
 
         let mask: NSEvent.EventTypeMask = [.flagsChanged, .keyDown]
@@ -39,6 +49,7 @@ final class DoubleTapModifierMonitor {
             self.localMonitor = nil
         }
         resetState()
+        lastFireTime = nil
         target = nil
     }
 
@@ -69,8 +80,15 @@ final class DoubleTapModifierMonitor {
 
     private func completeTap() {
         let now = ProcessInfo.processInfo.systemUptime
+
+        if let lastFireTime, now - lastFireTime < cooldown {
+            return
+        }
+
         if let lastTapTime, now - lastTapTime <= tapWindow {
+            guard now - lastTapTime >= minGap else { return }
             self.lastTapTime = nil
+            self.lastFireTime = now
             DispatchQueue.main.async { [weak self] in
                 self?.onLeader()
             }

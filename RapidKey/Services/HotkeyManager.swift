@@ -31,7 +31,12 @@ final class HotkeyManager {
 
         case .doubleTapModifier(let modifier):
             doubleTapMonitor.onLeader = { [weak self] in self?.fireLeader() }
-            doubleTapMonitor.start(modifier: modifier, tapWindow: config.behavior.doubleTapWindow)
+            doubleTapMonitor.start(
+                modifier: modifier,
+                tapWindow: config.behavior.doubleTapWindow,
+                minGap: config.behavior.doubleTapMinGap,
+                cooldown: config.behavior.doubleTapCooldown
+            )
 
             if doubleTapMonitor.hasGlobalAccess {
                 didRequestInputMonitoring = false
