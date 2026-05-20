@@ -25,6 +25,8 @@ xcuserdata/
 
 ## Build generated
 build/
+.release/
+.xcode-build/
 DerivedData/
 *.o
 *.lo
