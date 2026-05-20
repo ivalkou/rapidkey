@@ -18,8 +18,30 @@ RapidKey runs as a menu bar utility (no Dock icon). It watches your config file 
 
 ## Requirements
 
-- macOS **15.6** or later
+- macOS **15.6** or later (Apple Silicon)
 - Xcode (Swift 5; uses [TOMLKit](https://github.com/LebJe/TOMLKit) via Swift Package Manager)
+
+## Installation
+
+Install via Homebrew to get updates (preferred):
+
+```bash
+brew install --cask ivalkou/tap/rapidkey
+```
+
+Install a specific version:
+
+```bash
+brew install --cask ivalkou/tap/rapidkey@0.1.0
+```
+
+> **Note:** RapidKey is not notarized. Notarization is Apple's process for approving binaries before distribution. The Homebrew cask removes the `com.apple.quarantine` attribute on install, so the app should run without the "Apple cannot check … for malicious software" warning.
+>
+> For a manual install from [Releases](https://github.com/ivalkou/rapidkey/releases), unpack the zip, move `RapidKey.app` to `/Applications`, then if Gatekeeper blocks launch:
+>
+> ```bash
+> xattr -d com.apple.quarantine /Applications/RapidKey.app
+> ```
 
 ## Build and run
 
@@ -37,6 +59,14 @@ open build/Build/Products/Release/RapidKey.app
 ```
 
 The `build/` directory is gitignored.
+
+### Release build
+
+```bash
+./script/build-release.sh --build-version 0.1.0
+```
+
+Produces `.release/RapidKey-v0.1.0.zip` and `.release/rapidkey.rb` for the [homebrew-tap](https://github.com/ivalkou/homebrew-tap) repo.
 
 ## First launch
 
