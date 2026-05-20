@@ -69,6 +69,7 @@ On first run, RapidKey creates `~/.config/rapidkey/` and writes a starter `rapid
 Use the menu bar item to:
 
 - **Show [leader]** — open the command palette
+- **Palette keys** — **Backspace** steps back one group level (no effect at the root); **Esc** closes the palette
 - **Open Config Folder** — open the config directory in Finder
 - **Grant Input Monitoring…** — shown when the leader is `doubletap+…` and permission is missing
 - **Quit** — exit the app

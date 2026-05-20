@@ -50,6 +50,7 @@ enum PhysicalUSKeyMap {
         m[0x31] = "space"
         m[0x30] = "tab"
         m[0x24] = "return"
+        m[0x33] = "backspace"
         m[0x35] = "escape"
         m[0x7A] = "f1"
         m[0x78] = "f2"

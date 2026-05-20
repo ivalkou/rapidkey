@@ -22,6 +22,7 @@ struct CommandPaletteView: View {
                 prefix: state.prefix,
                 currentGroupTitle: state.currentGroupTitle
             )
+            .animation(nil, value: state.prefix)
 
             Divider()
                 .opacity(PaletteTheme.dividerOpacity(for: colorScheme))
@@ -35,13 +36,16 @@ struct CommandPaletteView: View {
                 PaletteBindingsList(items: state.items) { key in
                     _ = state.handle(key)
                 }
+                .animation(.easeOut(duration: 0.12), value: state.items)
             }
 
-            PaletteFooterView(onClose: { _ = state.handle("escape") })
+            PaletteFooterView(
+                showBack: !state.prefix.isEmpty,
+                onBack: { _ = state.handle("backspace") },
+                onClose: { _ = state.handle("escape") }
+            )
         }
         .padding(20)
-        .animation(.easeOut(duration: 0.12), value: state.items)
-        .animation(.easeOut(duration: 0.15), value: state.prefix)
         .animation(.easeOut(duration: 0.15), value: state.errorMessage)
         .background { panelFill }
         .overlay { panelStroke }

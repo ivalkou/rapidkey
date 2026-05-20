@@ -150,6 +150,14 @@ final class CommandPaletteState: ObservableObject {
             return true
         }
 
+        if key == "backspace" {
+            guard !prefix.isEmpty else { return true }
+            prefix.removeLast()
+            refreshItems()
+            armIdleTimer()
+            return true
+        }
+
         let cfg = configStore.config
         let next = prefix + [key]
 
