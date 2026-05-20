@@ -43,7 +43,8 @@ struct MenuBarContent: View {
         alert.informativeText = """
             A keyboard-driven command palette for macOS. Press the leader hotkey, \
             then type a key sequence to launch apps, open URLs, or run shell commands \
-            defined in ~/.config/rapidkey/rapidkey.toml.
+            defined in ~/.config/rapidkey/rapidkey.toml. \
+            See ~/.config/rapidkey/example.toml for full configuration reference.
 
             Author: Ivan Valkou
             """

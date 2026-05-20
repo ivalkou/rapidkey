@@ -21,7 +21,8 @@ final class ConfigStore: ObservableObject {
     private let configWatcher: ConfigFileWatcher
 
     init() {
-        Self.ensureDefaultExists()
+        Self.writeExampleConfig()
+        Self.ensureUserConfigExists()
         let initial = (try? ConfigLoader.loadConfigFromDisk()) ?? Self.emergencyFallback()
         self.config = initial
         self.lastGood = initial
@@ -40,7 +41,17 @@ final class ConfigStore: ObservableObject {
         return Config(leader: leader, bindings: [:], groupTitles: [:])
     }
 
-    static func ensureDefaultExists() {
+    static func writeExampleConfig() {
+        let dir = ConfigPaths.configDirectoryURL
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? ConfigPaths.exampleConfigToml.write(
+            to: ConfigPaths.exampleConfigURL,
+            atomically: true,
+            encoding: .utf8
+        )
+    }
+
+    static func ensureUserConfigExists() {
         let url = ConfigPaths.configURL
         let dir = ConfigPaths.configDirectoryURL
         if !FileManager.default.fileExists(atPath: url.path) {
@@ -87,7 +98,7 @@ final class ConfigStore: ObservableObject {
             do {
                 let url = ConfigPaths.configURL
                 if !FileManager.default.fileExists(atPath: url.path) {
-                    Self.ensureDefaultExists()
+                    Self.ensureUserConfigExists()
                 }
                 let next = try ConfigLoader.loadConfigFromDisk()
                 self.config = next

@@ -6,13 +6,19 @@ enum ConfigPaths {
             .appendingPathComponent(".config/rapidkey/rapidkey.toml", isDirectory: false)
     }
 
+    static var exampleConfigURL: URL {
+        configDirectoryURL.appendingPathComponent("example.toml", isDirectory: false)
+    }
+
     static var configDirectoryURL: URL {
         configURL.deletingLastPathComponent()
     }
 
-    static let defaultConfigToml = #"""
-# RapidKey configuration (~/.config/rapidkey/rapidkey.toml)
-# Reload from the menu bar after editing.
+    /// Reference config with full documentation. Rewritten on every app launch; not read by the app.
+    static let exampleConfigToml = #"""
+# RapidKey reference config (~/.config/rapidkey/example.toml)
+# Rewritten on every RapidKey launch. Not used by the app — read-only documentation and examples.
+# Edit ~/.config/rapidkey/rapidkey.toml to configure RapidKey.
 
 # Global shortcut to open the command palette.
 #
@@ -93,6 +99,43 @@ double_tap_cooldown_ms = 500
 
 # Group "x" — config maintenance.
 "x e" = { title = "Edit Config",             run = "open -t ~/.config/rapidkey/rapidkey.toml" }
+"x r" = { title = "Open Example",            run = "open -t ~/.config/rapidkey/example.toml" }
+"x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml" }
+"""#
+
+    /// Starter user config. Written only when rapidkey.toml is missing.
+    static let defaultConfigToml = #"""
+# RapidKey configuration (~/.config/rapidkey/rapidkey.toml)
+# Full reference and documentation: ~/.config/rapidkey/example.toml
+# Reload from the menu bar after editing.
+
+leader = "alt+space"
+
+[panel]
+position = "center"
+
+[behavior]
+timeout_ms = 0
+double_tap_ms = 350
+double_tap_min_ms = 80
+double_tap_cooldown_ms = 500
+
+[groups]
+"f" = "Files"
+"w" = "Web"
+"x" = "RapidKey Config"
+
+[bindings]
+"t" = { title = "Terminal", open = "Terminal" }
+"s" = { title = "Safari",   open = "Safari" }
+"f h" = { title = "Home",      run = "open ~" }
+"f d" = { title = "Downloads", run = "open ~/Downloads" }
+"f l" = { title = "List Home", run = "ls ~", show_output = true }
+"f p" = { title = "PWD Home",  run = "pwd", show_output = true, work_dir = "~" }
+"w g" = { title = "Google", url = "https://www.google.com" }
+"w c" = { title = "GitHub", url = "https://github.com" }
+"x e" = { title = "Edit Config",             run = "open -t ~/.config/rapidkey/rapidkey.toml" }
+"x r" = { title = "Open Example",            run = "open -t ~/.config/rapidkey/example.toml" }
 "x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml" }
 """#
 }

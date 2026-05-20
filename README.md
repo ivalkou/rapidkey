@@ -64,7 +64,7 @@ Maintainers: see [dev-docs/releasing.md](dev-docs/releasing.md) for publishing r
 
 ## First launch
 
-On first run, RapidKey creates `~/.config/rapidkey/` and writes a starter `rapidkey.toml` with example bindings.
+On first run, RapidKey creates `~/.config/rapidkey/` and writes a starter `rapidkey.toml` with example bindings. On every launch it also writes `example.toml` in the same folder — full configuration reference and documentation (not used by the app; edits are overwritten on the next launch).
 
 Use the menu bar item to:
 
@@ -73,11 +73,13 @@ Use the menu bar item to:
 - **Grant Input Monitoring…** — shown when the leader is `doubletap+…` and permission is missing
 - **Quit** — exit the app
 
-Edit `rapidkey.toml` in any text editor; changes are picked up automatically after you save (debounced file watcher).
+Edit `rapidkey.toml` in any text editor; changes are picked up automatically after you save (debounced file watcher). See `example.toml` in the config folder for all options and examples.
 
 ## Configuration
 
 Config file: `~/.config/rapidkey/rapidkey.toml`
+
+Reference (rewritten on each app launch): `~/.config/rapidkey/example.toml`
 
 ### Top-level options
 
