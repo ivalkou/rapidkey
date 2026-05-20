@@ -35,7 +35,7 @@ One command bumps Xcode versions, builds, creates a GitHub Release, and updates 
 |------|--------|
 | `--version X.Y.Z` | Set `MARKETING_VERSION` explicitly |
 | `--bump patch\|minor\|major` | Bump from current version in `project.pbxproj` |
-| `--notes TEXT` | GitHub release notes (default: short template) |
+| `--notes TEXT` | GitHub release notes (default: commit subjects since the previous release tag) |
 | `--yes` | Skip confirmation prompt |
 | `--dry-run` | Print steps only |
 | `--skip-push` | Commit locally, no `git push` / no tap push |
@@ -98,4 +98,4 @@ rm -rf /Applications/RapidKey.app && brew install --cask ivalkou/tap/rapidkey
 
 - Releases are **not notarized**; the Homebrew cask removes `com.apple.quarantine` in `postflight`
 - Builds are **arm64 only** (no Intel Mac support via Homebrew)
-- Scripts: [script/publish-release.sh](../script/publish-release.sh), [script/lib/version.sh](../script/lib/version.sh)
+- Scripts: [script/publish-release.sh](../script/publish-release.sh), [script/lib/version.sh](../script/lib/version.sh), [script/lib/changelog.sh](../script/lib/changelog.sh)

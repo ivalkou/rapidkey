@@ -7,6 +7,8 @@ cd "$ROOT"
 
 # shellcheck source=lib/version.sh
 source "$SCRIPT_DIR/lib/version.sh"
+# shellcheck source=lib/changelog.sh
+source "$SCRIPT_DIR/lib/changelog.sh"
 
 GITHUB_REPO="ivalkou/rapidkey"
 HOMEBREW_TAP_DIR="$(cd "$ROOT/.." && pwd)/homebrew-tap"
@@ -30,7 +32,7 @@ Publish a RapidKey release: bump Xcode versions, build, GitHub Release, Homebrew
 Options:
   --version X.Y.Z     Explicit marketing version
   --bump KIND         Bump from current MARKETING_VERSION (patch|minor|major)
-  --notes TEXT        GitHub release notes (default: short template)
+  --notes TEXT        GitHub release notes (default: commits since previous release)
   --dry-run           Print steps only; do not modify files or remotes
   --yes               Skip confirmation prompt
   --no-pin            Do not run pin.sh in homebrew-tap
@@ -132,21 +134,16 @@ validate_semver "$VERSION" || exit 1
 new_build=$((current_build + 1))
 
 if test -z "$NOTES"; then
-    NOTES="$(cat <<EOF
-RapidKey v$VERSION
-
-Install or upgrade via Homebrew:
-
-\`\`\`bash
-brew update && brew upgrade --cask ivalkou/tap/rapidkey
-\`\`\`
-EOF
-)"
+    NOTES="$(generate_release_notes "$VERSION" "$current_marketing")"
 fi
 
 echo "Current: MARKETING_VERSION=$current_marketing, CURRENT_PROJECT_VERSION=$current_build"
 echo "Release: MARKETING_VERSION=$VERSION, CURRENT_PROJECT_VERSION=$new_build"
 echo "homebrew-tap: $HOMEBREW_TAP_DIR"
+echo
+echo "Release notes:"
+echo "$NOTES"
+echo
 
 preflight
 
