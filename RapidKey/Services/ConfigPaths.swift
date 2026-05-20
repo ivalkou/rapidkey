@@ -67,7 +67,7 @@ double_tap_ms = 350
 # Root-level leaf: one key runs the action immediately.
 "t" = { title = "Terminal", open = "Terminal" }
 "s" = { title = "Safari",   open = "Safari" }
-
+……
 # Group "f" — shell commands (run).
 "f h" = { title = "Home",      run = "open ~" }
 "f d" = { title = "Downloads", run = "open ~/Downloads" }

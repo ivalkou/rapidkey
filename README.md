@@ -60,13 +60,7 @@ open build/Build/Products/Release/RapidKey.app
 
 The `build/` directory is gitignored.
 
-### Release build
-
-```bash
-./script/build-release.sh --build-version 0.1.0
-```
-
-Produces `.release/RapidKey-v0.1.0.zip` and `.release/rapidkey.rb` for the [homebrew-tap](https://github.com/ivalkou/homebrew-tap) repo.
+Maintainers: see [dev-docs/releasing.md](dev-docs/releasing.md) for publishing releases and Homebrew tap updates.
 
 ## First launch
 
