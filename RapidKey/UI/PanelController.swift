@@ -39,7 +39,10 @@ final class PanelController: NSWindowController, NSWindowDelegate {
         panel.delegate = self
 
         state.onAutoClose = { [weak self] in
-            self?.hide()
+            self?.hide(restoreFocus: true)
+        }
+        state.onDismiss = { [weak self] restoreFocus, discardSavedFocus in
+            self?.hide(restoreFocus: restoreFocus, discardSavedFocus: discardSavedFocus)
         }
         state.isPanelKeyAndVisible = { [weak self] in
             guard let w = self?.window as? NSPanel else { return false }
@@ -52,14 +55,14 @@ final class PanelController: NSWindowController, NSWindowDelegate {
     }
 
     func windowDidResignKey(_ notification: Notification) {
-        hide()
+        hide(restoreFocus: true)
     }
 
     func toggle() {
         guard let panel = window as? CommandPanel else { return }
 
         if panel.isVisible {
-            hide()
+            hide(restoreFocus: true)
         } else {
             show()
         }
@@ -71,6 +74,7 @@ final class PanelController: NSWindowController, NSWindowDelegate {
         state.cancelIdleTimer()
         state.reset(scheduleIdleTimeout: false)
         positionPanel(panel)
+        PreviousAppFocus.capture()
         panel.orderFrontRegardless()
         panel.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -83,9 +87,14 @@ final class PanelController: NSWindowController, NSWindowDelegate {
         }
     }
 
-    func hide() {
+    func hide(restoreFocus: Bool = true, discardSavedFocus: Bool = false) {
         state.cancelIdleTimer()
         window?.orderOut(nil)
+        if restoreFocus {
+            PreviousAppFocus.restoreIfRapidKeyStillFrontmost()
+        } else if discardSavedFocus {
+            PreviousAppFocus.discard()
+        }
     }
 
     private func positionPanel(_ panel: NSPanel) {

@@ -186,7 +186,7 @@ final class ShellResultPanelController: NSObject, NSWindowDelegate {
     }
 
     func show(session: ShellResultSession, panel panelConfig: PanelConfig) {
-        hide()
+        dismissPanel(restoreFocus: false)
 
         self.session = session
         self.panelConfig = panelConfig
@@ -217,6 +217,7 @@ final class ShellResultPanelController: NSObject, NSWindowDelegate {
 
         panel = p
         PanelPositioning.position(p, using: panelConfig)
+        PreviousAppFocus.capture()
         p.orderFrontRegardless()
         p.makeKeyAndOrderFront(nil)
         NSApp.activate(ignoringOtherApps: true)
@@ -243,6 +244,10 @@ final class ShellResultPanelController: NSObject, NSWindowDelegate {
     }
 
     func hide() {
+        dismissPanel(restoreFocus: true)
+    }
+
+    private func dismissPanel(restoreFocus: Bool) {
         if let monitor = keyMonitor {
             NSEvent.removeMonitor(monitor)
             keyMonitor = nil
@@ -250,6 +255,9 @@ final class ShellResultPanelController: NSObject, NSWindowDelegate {
         panel?.orderOut(nil)
         panel = nil
         session = nil
+        if restoreFocus {
+            PreviousAppFocus.restoreIfRapidKeyStillFrontmost()
+        }
     }
 
     func windowDidResignKey(_ notification: Notification) {

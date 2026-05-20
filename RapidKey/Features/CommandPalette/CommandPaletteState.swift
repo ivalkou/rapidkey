@@ -10,6 +10,11 @@ final class CommandPaletteState: ObservableObject {
 
     /// When set, called after idle timeout (e.g. hide panel).
     var onAutoClose: (() -> Void)?
+    /// When set, called to dismiss the panel.
+    /// - Parameters:
+    ///   - restoreFocus: activate the app that was frontmost before the palette opened.
+    ///   - discardSavedFocus: drop the saved app without restoring (e.g. hand off to another app).
+    var onDismiss: ((_ restoreFocus: Bool, _ discardSavedFocus: Bool) -> Void)?
     /// When false, idle timer is not scheduled (panel closed or not key).
     var isPanelKeyAndVisible: (() -> Bool)?
 
@@ -139,7 +144,7 @@ final class CommandPaletteState: ObservableObject {
     func handle(_ key: String) -> Bool {
         if key == "escape" {
             cancelIdleTimer()
-            NSApp.keyWindow?.orderOut(nil)
+            onDismiss?(true, false)
             reset(scheduleIdleTimeout: false)
             return true
         }
@@ -150,7 +155,8 @@ final class CommandPaletteState: ObservableObject {
         if let action = cfg.bindings[next] {
             ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
             cancelIdleTimer()
-            NSApp.keyWindow?.orderOut(nil)
+            let focus = Self.focusDisposition(after: action)
+            onDismiss?(focus.restoreFocus, focus.discardSavedFocus)
             reset(scheduleIdleTimeout: false)
             return true
         }
@@ -166,5 +172,14 @@ final class CommandPaletteState: ObservableObject {
         }
 
         return false
+    }
+
+    private static func focusDisposition(after action: Action) -> (restoreFocus: Bool, discardSavedFocus: Bool) {
+        switch action.kind {
+        case .open, .url:
+            return (false, true)
+        case .run(_, let showOutput, _):
+            return showOutput ? (false, false) : (true, false)
+        }
     }
 }
