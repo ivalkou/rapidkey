@@ -8,6 +8,8 @@ Inspired by the [which-key](https://github.com/folke/which-key.nvim) plugin in [
 
 ![RapidKey command palette](screenshots/panel.png)
 
+![RapidKey command output panel](screenshots/command_output.png)
+
 ## Features
 
 - Global **leader** hotkey opens a command palette
