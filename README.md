@@ -4,6 +4,10 @@ A keyboard-driven command palette for macOS. Press the leader hotkey, then type 
 
 RapidKey runs as a menu bar utility (no Dock icon). It watches your config file and reloads changes automatically when you save.
 
+Inspired by the [which-key](https://github.com/folke/which-key.nvim) plugin in [LazyVim](https://www.lazyvim.org/) — press a leader key, then see a visual map of the shortcuts available at each step.
+
+![RapidKey command palette](screenshots/panel.png)
+
 ## Features
 
 - Global **leader** hotkey opens a command palette
