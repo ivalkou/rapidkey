@@ -273,6 +273,7 @@ final class ShellResultPanel: NSPanel {
 
 private struct ShellResultView: View {
     private static let outputLogHeight: CGFloat = 280
+    private static let commandBlockMaxHeight: CGFloat = 96
 
     @ObservedObject var session: ShellResultSession
     let onClose: () -> Void
@@ -351,18 +352,23 @@ private struct ShellResultView: View {
     }
 
     private var commandBlock: some View {
-        Text(session.command)
-            .font(.system(.callout, design: .monospaced))
-            .foregroundStyle(.primary)
-            .lineLimit(2)
-            .textSelection(.enabled)
-            .padding(.horizontal, 10)
-            .padding(.vertical, 8)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background {
-                RoundedRectangle(cornerRadius: PaletteTheme.rowCornerRadius, style: .continuous)
-                    .fill(PaletteTheme.keyChipNeutralFill(for: colorScheme))
-            }
+        ScrollView {
+            Text(session.command)
+                .font(.system(.callout, design: .monospaced))
+                .foregroundStyle(.primary)
+                .multilineTextAlignment(.leading)
+                .textSelection(.enabled)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .scrollIndicators(.hidden)
+        .frame(maxHeight: Self.commandBlockMaxHeight)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background {
+            RoundedRectangle(cornerRadius: PaletteTheme.rowCornerRadius, style: .continuous)
+                .fill(PaletteTheme.keyChipNeutralFill(for: colorScheme))
+        }
     }
 
     @ViewBuilder
