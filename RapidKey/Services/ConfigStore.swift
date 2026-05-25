@@ -51,13 +51,13 @@ final class ConfigStore: ObservableObject {
         )
     }
 
+    /// Creates `rapidkey.toml` only when the file is missing. Never overwrites an existing config.
     static func ensureUserConfigExists() {
         let url = ConfigPaths.configURL
+        guard !FileManager.default.fileExists(atPath: url.path) else { return }
         let dir = ConfigPaths.configDirectoryURL
-        if !FileManager.default.fileExists(atPath: url.path) {
-            try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-            try? ConfigPaths.defaultConfigToml.write(to: url, atomically: true, encoding: .utf8)
-        }
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        try? ConfigPaths.defaultConfigToml.write(to: url, atomically: true, encoding: .utf8)
     }
 
     func reportInputMonitoringRequired() {
