@@ -5,6 +5,7 @@ enum PaletteItemKind: Equatable {
     case run
     case open
     case url
+    case switchApp
 }
 
 struct PaletteItem: Identifiable, Equatable {

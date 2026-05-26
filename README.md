@@ -14,6 +14,7 @@ Inspired by the [which-key](https://github.com/folke/which-key.nvim) plugin in [
 
 - Global **leader** hotkey opens a command palette
 - **Key sequences** with optional **groups** and section titles in the palette header
+- **Running apps** branch at the root: press **Space** to switch to open applications (hotkeys `1`–`0`, then `a`–`z`)
 - Actions: `run` (shell command), `open` (application), `url` (browser)
 - Live shell output panel for long-running commands (`show_output`)
 - Config hot-reload when `rapidkey.toml` is saved
@@ -75,7 +76,7 @@ On first run, RapidKey creates `~/.config/rapidkey/` and writes a fully document
 Use the menu bar item to:
 
 - **Show [leader]** — open the command palette
-- **Palette keys** — **Backspace** steps back one group level (no effect at the root); **Esc** closes the palette
+- **Palette keys** — at the **root**, **Space** opens the running-apps branch; **Backspace** steps back one level in config groups or returns from running apps to the root (no effect at the root); **Esc** closes the palette
 - **Open Config Folder** — open the config directory in Finder
 - **Grant Input Monitoring…** — shown when the leader is `doubletap+…` and permission is missing
 - **Quit** — exit the app
@@ -166,6 +167,16 @@ double_tap_cooldown_ms = 500
 ```
 
 A group key (e.g. `"f"`) must have bindings under that prefix (e.g. `"f h"`, `"f d"`) to appear as a navigable group.
+
+### Running apps (built-in)
+
+At the **root** of the palette, **Space** opens a dynamic list of running GUI applications. The list is a snapshot taken when you enter the branch:
+
+- **Order** — frontmost app first, then the rest sorted by name
+- **Hotkeys** — `1` through `9`, `0`, then `a` through `z` (up to 36 apps; extras are omitted)
+- **Action** — activates the selected app and closes the palette
+
+**Space** is reserved for this branch at the root; a root-level binding `"space"` in `[bindings]` will not be reachable. This branch is not configurable via TOML in v1.
 
 ## Permissions
 

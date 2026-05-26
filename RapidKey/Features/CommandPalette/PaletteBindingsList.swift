@@ -11,17 +11,17 @@ struct PaletteBindingsList: View {
     let items: [PaletteItem]
     let onSelectKey: (String) -> Void
 
+    private var needsScroll: Bool {
+        items.count > PaletteBindingsListLayout.maxVisibleRowsBeforeScroll
+    }
+
     var body: some View {
-        Group {
-            if items.count <= PaletteBindingsListLayout.maxVisibleRowsBeforeScroll {
-                listContent
-            } else {
-                ScrollView {
-                    listContent
-                }
-                .frame(maxHeight: PaletteBindingsListLayout.scrollListMaxHeight)
-            }
+        ScrollView {
+            listContent
         }
+        .scrollIndicators(.hidden)
+        .scrollDisabled(!needsScroll)
+        .frame(maxHeight: needsScroll ? PaletteBindingsListLayout.scrollListMaxHeight : nil)
     }
 
     @ViewBuilder

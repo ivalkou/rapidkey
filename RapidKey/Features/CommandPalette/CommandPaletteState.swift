@@ -2,9 +2,14 @@ import AppKit
 import Combine
 import Foundation
 
+enum PaletteBranch: Equatable {
+    case config(prefix: [String])
+    case runningApps(snapshot: [RunningAppEntry])
+}
+
 @MainActor
 final class CommandPaletteState: ObservableObject {
-    @Published var prefix: [String] = []
+    @Published var branch: PaletteBranch = .config(prefix: [])
     @Published var items: [PaletteItem] = []
     @Published var errorMessage: String?
 
@@ -43,6 +48,30 @@ final class CommandPaletteState: ObservableObject {
         refreshItems()
     }
 
+    var isAtRoot: Bool {
+        if case .config(let prefix) = branch { return prefix.isEmpty }
+        return false
+    }
+
+    /// Breadcrumb tokens for the palette header.
+    var prefix: [String] {
+        switch branch {
+        case .config(let prefix):
+            return prefix
+        case .runningApps:
+            return ["space"]
+        }
+    }
+
+    var emptyMessage: String {
+        switch branch {
+        case .config:
+            return "No bindings in config"
+        case .runningApps:
+            return "No running apps"
+        }
+    }
+
     func cancelIdleTimer() {
         idleTask?.cancel()
         idleTask = nil
@@ -66,7 +95,7 @@ final class CommandPaletteState: ObservableObject {
     }
 
     func reset(scheduleIdleTimeout: Bool = true) {
-        prefix = []
+        branch = .config(prefix: [])
         refreshItems()
         if scheduleIdleTimeout {
             armIdleTimer()
@@ -75,13 +104,25 @@ final class CommandPaletteState: ObservableObject {
 
     /// Title for the current prefix path (from `groupTitles`), if any.
     var currentGroupTitle: String? {
-        let s = configStore.config.groupTitles[prefix] ?? ""
-        return s.isEmpty ? nil : s
+        switch branch {
+        case .config(let prefix):
+            let s = configStore.config.groupTitles[prefix] ?? ""
+            return s.isEmpty ? nil : s
+        case .runningApps:
+            return "Running Apps"
+        }
     }
 
     private func refreshItems() {
         let cfg = configStore.config
-        items = Self.buildItems(prefix: prefix, config: cfg)
+        switch branch {
+        case .config(let prefix):
+            items = Self.buildConfigItems(prefix: prefix, config: cfg)
+        case .runningApps(let snapshot):
+            items = snapshot.map { entry in
+                PaletteItem(key: entry.key, title: entry.title, kind: .switchApp)
+            }
+        }
     }
 
     private static func bindingKeys(extending prefix: [String], bindings: [[String]: Action]) -> [[String]] {
@@ -112,7 +153,7 @@ final class CommandPaletteState: ObservableObject {
         }.count
     }
 
-    private static func buildItems(prefix: [String], config: Config) -> [PaletteItem] {
+    private static func buildConfigItems(prefix: [String], config: Config) -> [PaletteItem] {
         let keys = bindingKeys(extending: prefix, bindings: config.bindings)
         var seen = Set<String>()
         var rows: [PaletteItem] = []
@@ -151,36 +192,59 @@ final class CommandPaletteState: ObservableObject {
         }
 
         if key == "backspace" {
-            guard !prefix.isEmpty else { return true }
-            prefix.removeLast()
+            switch branch {
+            case .config(let prefix):
+                guard !prefix.isEmpty else { return true }
+                branch = .config(prefix: Array(prefix.dropLast()))
+            case .runningApps:
+                branch = .config(prefix: [])
+            }
             refreshItems()
             armIdleTimer()
             return true
         }
 
-        let cfg = configStore.config
-        let next = prefix + [key]
-
-        if let action = cfg.bindings[next] {
-            ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
+        switch branch {
+        case .runningApps(let snapshot):
+            guard let entry = snapshot.first(where: { $0.key == key }) else { return false }
+            RunningAppsProvider.activate(pid: entry.pid)
             cancelIdleTimer()
-            let focus = Self.focusDisposition(after: action)
-            onDismiss?(focus.restoreFocus, focus.discardSavedFocus)
+            onDismiss?(false, true)
             reset(scheduleIdleTimeout: false)
             return true
-        }
 
-        let hasDescendant = cfg.bindings.keys.contains { path in
-            path.count > next.count && Array(path.prefix(next.count)) == next
-        }
-        if hasDescendant {
-            prefix = next
-            refreshItems()
-            armIdleTimer()
-            return true
-        }
+        case .config(let prefix):
+            if prefix.isEmpty, key == "space" {
+                branch = .runningApps(snapshot: RunningAppsProvider.snapshot())
+                refreshItems()
+                armIdleTimer()
+                return true
+            }
 
-        return false
+            let cfg = configStore.config
+            let next = prefix + [key]
+
+            if let action = cfg.bindings[next] {
+                ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
+                cancelIdleTimer()
+                let focus = Self.focusDisposition(after: action)
+                onDismiss?(focus.restoreFocus, focus.discardSavedFocus)
+                reset(scheduleIdleTimeout: false)
+                return true
+            }
+
+            let hasDescendant = cfg.bindings.keys.contains { path in
+                path.count > next.count && Array(path.prefix(next.count)) == next
+            }
+            if hasDescendant {
+                branch = .config(prefix: next)
+                refreshItems()
+                armIdleTimer()
+                return true
+            }
+
+            return false
+        }
     }
 
     private static func focusDisposition(after action: Action) -> (restoreFocus: Bool, discardSavedFocus: Bool) {

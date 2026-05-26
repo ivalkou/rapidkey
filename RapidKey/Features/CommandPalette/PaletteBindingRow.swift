@@ -60,6 +60,7 @@ struct PaletteBindingRow: View {
         case .run: return "terminal.fill"
         case .open: return "app.fill"
         case .url: return "link"
+        case .switchApp: return "macwindow.on.rectangle"
         }
     }
 
@@ -69,20 +70,21 @@ struct PaletteBindingRow: View {
         case .run: return PaletteTheme.runAccent
         case .open: return PaletteTheme.openAccent
         case .url: return PaletteTheme.urlAccent
+        case .switchApp: return PaletteTheme.openAccent
         }
     }
 
     private var titleWeight: Font.Weight {
         switch item.kind {
         case .group: return .semibold
-        case .run, .open, .url: return .regular
+        case .run, .open, .url, .switchApp: return .regular
         }
     }
 
     private var titleColor: Color {
         switch item.kind {
         case .group: return PaletteTheme.groupAccent(for: colorScheme)
-        case .run, .open, .url: return Color.primary
+        case .run, .open, .url, .switchApp: return Color.primary
         }
     }
 }

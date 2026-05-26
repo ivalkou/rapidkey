@@ -1,6 +1,8 @@
 import SwiftUI
 
 struct PaletteFooterView: View {
+    let showSpace: Bool
+    let onSpace: () -> Void
     let showBack: Bool
     let onBack: () -> Void
     let onClose: () -> Void
@@ -13,12 +15,15 @@ struct PaletteFooterView: View {
                 .opacity(PaletteTheme.dividerOpacity(for: colorScheme) * 0.85)
 
             HStack {
-                if showBack {
+                if showSpace {
+                    ServiceKeyChip(key: "space", label: "running apps", action: onSpace)
+                } else if showBack {
                     ServiceKeyChip(key: "backspace", label: "back", action: onBack)
                 }
                 Spacer(minLength: 0)
                 ServiceKeyChip(key: "esc", label: "close", action: onClose)
             }
+            .animation(nil, value: showSpace)
             .animation(nil, value: showBack)
             .padding(.top, 10)
         }

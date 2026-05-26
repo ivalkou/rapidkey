@@ -30,17 +30,19 @@ struct CommandPaletteView: View {
                 .padding(.bottom, 12)
 
             if state.items.isEmpty {
-                Text("No bindings in config")
+                Text(state.emptyMessage)
                     .foregroundStyle(.tertiary)
             } else {
                 PaletteBindingsList(items: state.items) { key in
                     _ = state.handle(key)
                 }
-                .animation(.easeOut(duration: 0.12), value: state.items)
-            }
+                .animation(nil, value: state.items)
+              }
 
             PaletteFooterView(
-                showBack: !state.prefix.isEmpty,
+                showSpace: state.isAtRoot,
+                onSpace: { _ = state.handle("space") },
+                showBack: !state.isAtRoot,
                 onBack: { _ = state.handle("backspace") },
                 onClose: { _ = state.handle("escape") }
             )
