@@ -121,7 +121,7 @@ Also accepts `doubletap+alt`, `doubletap+cmd`, `doubletap+shift` (alias: `2tap+�
 
 | Section | Purpose |
 |---------|---------|
-| `[panel]` | Where the palette appears: `center`, `cursor`, `top`, `bottom` |
+| `[panel]` | Where the palette appears: `center`, `cursor`, `top`, `bottom`; `show_app_icons` — bundle icons for `open` bindings and running apps (default `true`) |
 | `[behavior]` | `timeout_ms` — auto-close after idle (0 = disabled); `double_tap_ms` — max gap between modifier taps (default 350); `double_tap_min_ms` — min gap, shorter pairs ignored as bounce (default 80); `double_tap_cooldown_ms` — ignore new double-taps after a trigger (default 500) |
 | `[groups]` | Optional titles for key prefixes (shown in the palette header) |
 | `[bindings]` | Key sequences and their actions |
@@ -138,6 +138,7 @@ Each binding is an inline table with:
 - Exactly one of: `run`, `open`, `url`
 - `show_output` — with `run` only: show live command output (default `false`)
 - `work_dir` — with `run` only: working directory (absolute path or `~`)
+- `confirm` — with `run` only: confirmation dialog before executing (default `false`); `true` uses the binding title, or pass a custom string
 
 Example:
 
@@ -167,6 +168,18 @@ double_tap_cooldown_ms = 500
 ```
 
 A group key (e.g. `"f"`) must have bindings under that prefix (e.g. `"f h"`, `"f d"`) to appear as a navigable group.
+
+### Edit config
+
+The default `"x e"` binding uses `open -t`, which opens the file in the associated text editor (often TextEdit). To use **nvim**, MacVim, VS Code, or `$EDITOR`, replace the `run` value in your config:
+
+```toml
+"x e" = { title = "Edit Config", run = "nvim ~/.config/rapidkey/rapidkey.toml" }
+"x e" = { title = "Edit Config", run = "open -a MacVim ~/.config/rapidkey/rapidkey.toml" }
+"x e" = { title = "Edit Config", run = "\"$EDITOR\" ~/.config/rapidkey/rapidkey.toml" }
+```
+
+The `$EDITOR` form works when your configured [shell](#top-level-options) expands the variable (e.g. from your login profile).
 
 ### Running apps (built-in)
 

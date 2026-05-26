@@ -9,6 +9,8 @@ enum PanelPosition: String, Equatable {
 
 struct PanelConfig: Equatable {
     var position: PanelPosition = .center
+    /// When true, show bundle icons for `open` bindings and running apps instead of generic SF Symbols.
+    var showAppIcons: Bool = true
 }
 
 struct BehaviorConfig: Equatable {

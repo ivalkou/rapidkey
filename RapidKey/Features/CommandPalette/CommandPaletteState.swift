@@ -119,8 +119,14 @@ final class CommandPaletteState: ObservableObject {
         case .config(let prefix):
             items = Self.buildConfigItems(prefix: prefix, config: cfg)
         case .runningApps(let snapshot):
+            let showIcons = cfg.panel.showAppIcons
             items = snapshot.map { entry in
-                PaletteItem(key: entry.key, title: entry.title, kind: .switchApp)
+                PaletteItem(
+                    key: entry.key,
+                    title: entry.title,
+                    kind: .switchApp,
+                    appIconRef: showIcons ? .processID(entry.pid) : nil
+                )
             }
         }
     }
@@ -166,12 +172,17 @@ final class CommandPaletteState: ObservableObject {
             let item: PaletteItem
             if let action = config.bindings[nextPath] {
                 let kind: PaletteItemKind
+                var appIconRef: PaletteAppIconRef?
                 switch action.kind {
                 case .run: kind = .run
-                case .open: kind = .open
+                case .open(let name):
+                    kind = .open
+                    if config.panel.showAppIcons {
+                        appIconRef = .applicationName(name)
+                    }
                 case .url: kind = .url
                 }
-                item = PaletteItem(key: token, title: action.title, kind: kind)
+                item = PaletteItem(key: token, title: action.title, kind: kind, appIconRef: appIconRef)
             } else {
                 let title = config.groupTitles[nextPath] ?? ""
                 let subtreeCount = subtreeBindingCount(prefix: nextPath, bindings: config.bindings)
@@ -225,6 +236,11 @@ final class CommandPaletteState: ObservableObject {
             let next = prefix + [key]
 
             if let action = cfg.bindings[next] {
+                if case .run(_, _, _, let confirm?) = action.kind,
+                   !RunConfirmation.userConfirmed(message: confirm) {
+                    armIdleTimer()
+                    return true
+                }
                 ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
                 cancelIdleTimer()
                 let focus = Self.focusDisposition(after: action)
@@ -251,7 +267,7 @@ final class CommandPaletteState: ObservableObject {
         switch action.kind {
         case .open, .url:
             return (false, true)
-        case .run(_, let showOutput, _):
+        case .run(_, let showOutput, _, _):
             return showOutput ? (false, false) : (true, false)
         }
     }

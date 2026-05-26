@@ -4,7 +4,7 @@ import Foundation
 enum ActionRunner {
     static func run(_ action: Action, shellPath: String, panel: PanelConfig) {
         switch action.kind {
-        case .run(let cmd, let showOutput, let workDir):
+        case .run(let cmd, let showOutput, let workDir, _):
             ShellExecutor.runDetached(
                 command: cmd,
                 shellPath: shellPath,

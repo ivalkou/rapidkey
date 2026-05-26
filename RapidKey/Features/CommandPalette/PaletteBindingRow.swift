@@ -1,3 +1,4 @@
+import AppKit
 import SwiftUI
 
 struct PaletteBindingRow: View {
@@ -6,6 +7,7 @@ struct PaletteBindingRow: View {
 
     @Environment(\.colorScheme) private var colorScheme
     @State private var isHovered = false
+    @State private var resolvedAppIcon: NSImage?
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -15,10 +17,8 @@ struct PaletteBindingRow: View {
                 .font(.caption2)
                 .foregroundStyle(.tertiary)
 
-            Image(systemName: iconName)
-                .font(.caption)
-                .foregroundStyle(accentColor)
-                .frame(width: 14, alignment: .center)
+            rowIcon
+                .frame(width: 14, height: 14, alignment: .center)
 
             Text(item.title.isEmpty ? " " : item.title)
                 .font(.body)
@@ -52,6 +52,29 @@ struct PaletteBindingRow: View {
         .onTapGesture {
             onSelectKey(item.key)
         }
+        .onAppear(perform: loadAppIcon)
+        .onChange(of: item.appIconRef) { _, _ in loadAppIcon() }
+    }
+
+    @ViewBuilder
+    private var rowIcon: some View {
+        if let resolvedAppIcon {
+            Image(nsImage: resolvedAppIcon)
+                .resizable()
+                .interpolation(.high)
+        } else {
+            Image(systemName: iconName)
+                .font(.caption)
+                .foregroundStyle(accentColor)
+        }
+    }
+
+    private func loadAppIcon() {
+        guard let ref = item.appIconRef else {
+            resolvedAppIcon = nil
+            return
+        }
+        resolvedAppIcon = AppIconProvider.icon(for: ref)
     }
 
     private var iconName: String {

@@ -14,7 +14,11 @@ enum PaletteTheme {
 
     /// Slightly denser material in light mode so content behind the panel does not wash out the UI.
     static func panelMaterial(for scheme: ColorScheme) -> Material {
-        scheme == .light ? .regularMaterial : .ultraThinMaterial
+        switch scheme {
+        case .light: .regularMaterial
+        case .dark: .regularMaterial
+        @unknown default: .regularMaterial
+        } 
     }
 
     /// Light: dark edge on bright blur; dark: soft highlight on dark blur.

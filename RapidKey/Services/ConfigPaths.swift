@@ -60,6 +60,7 @@ leader = "alt+space"
 # Where the command palette and command output panel appear on screen.
 [panel]
 position = "center"   # center | cursor | top | bottom
+# show_app_icons = false  # disable bundle icons for open bindings and running apps (default true)
 
 # Auto-close the palette after idle time (milliseconds). 0 = never auto-close.
 # double_tap_ms: max gap between modifier taps for doubletap+ leader (default 350).
@@ -87,6 +88,7 @@ double_tap_cooldown_ms = 500
 #   url         — URL opened in the default browser
 #   show_output — with run only: open a live output dialog at start; updates while the command runs (default false)
 #   work_dir    — with run only: working directory for the shell (absolute path or ~; must exist)
+#   confirm     — with run only: ask before executing (default false); true uses title, or a custom string
 [bindings]
 # Root-level leaf: one key runs the action immediately.
 "t" = { title = "Terminal", open = "Terminal" }
@@ -106,9 +108,13 @@ double_tap_cooldown_ms = 500
 "w c" = { title = "GitHub", url = "https://github.com" }
 
 # Group "x" — config maintenance.
+# Edit Config: open -t uses the default text editor (often TextEdit). For nvim or another editor, replace run:
+#   run = "nvim ~/.config/rapidkey/rapidkey.toml"
+#   run = "open -a MacVim ~/.config/rapidkey/rapidkey.toml"
+#   run = "\"$EDITOR\" ~/.config/rapidkey/rapidkey.toml"   # if shell expands $EDITOR
 "x e" = { title = "Edit Config",             run = "open -t ~/.config/rapidkey/rapidkey.toml" }
 "x r" = { title = "Open Example",            run = "open -t ~/.config/rapidkey/example.toml" }
-"x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml" }
+"x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml", confirm = "Delete rapidkey.toml?" }
 """#
 
     /// Reference config with full documentation. Rewritten on every app launch; not read by the app.

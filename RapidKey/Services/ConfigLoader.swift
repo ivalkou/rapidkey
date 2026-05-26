@@ -213,6 +213,16 @@ enum ConfigLoader {
             }
 
             let workDir = try parseWorkDir(key: key, inner: inner, source: source)
+            let confirmMessage = try parseConfirm(key: key, title: title, inner: inner, source: source, run: run)
+
+            if confirmMessage != nil, run == nil {
+                let ln = lineForKeyAssignment(key, in: source)
+                throw makeError(
+                    code: 11,
+                    detail: "Binding \"\(key)\": confirm is only valid with 'run'.",
+                    line: ln
+                )
+            }
 
             if workDir != nil, run == nil {
                 let ln = lineForKeyAssignment(key, in: source)
@@ -225,7 +235,7 @@ enum ConfigLoader {
 
             let kind: Action.Kind
             if let run {
-                kind = .run(run, showOutput: showOutput ?? false, workDir: workDir)
+                kind = .run(run, showOutput: showOutput ?? false, workDir: workDir, confirmMessage: confirmMessage)
             } else if let open {
                 kind = .open(open)
             } else if let urlStr, let url = URL(string: urlStr), url.scheme != nil {
@@ -277,6 +287,39 @@ enum ConfigLoader {
         }
 
         return expanded
+    }
+
+    private static func parseConfirm(
+        key: String,
+        title: String,
+        inner: TOMLTable,
+        source: String,
+        run: String?
+    ) throws -> String? {
+        guard let conv = inner["confirm"] else { return nil }
+
+        if conv.type == .bool {
+            guard let enabled = conv.bool else {
+                let ln = lineForKeyAssignment(key, in: source)
+                throw makeError(
+                    code: 12,
+                    detail: "Binding \"\(key)\": confirm must be a boolean or non-empty string.",
+                    line: ln
+                )
+            }
+            return enabled ? title : nil
+        }
+
+        if conv.type == .string, let message = conv.string, !message.isEmpty {
+            return message
+        }
+
+        let ln = lineForKeyAssignment(key, in: source)
+        throw makeError(
+            code: 12,
+            detail: "Binding \"\(key)\": confirm must be a boolean or non-empty string.",
+            line: ln
+        )
     }
 
     private static func parseGroupsTable(_ table: TOMLTable, bindingPaths: Set<[String]>) -> [[String]: String] {
@@ -333,6 +376,17 @@ enum ConfigLoader {
             }
             let ln = lineForKeyAssignment("position", in: source)
             panel.position = try parsePanelPositionString(raw, source: source, line: ln)
+        }
+        if let conv = table["show_app_icons"] {
+            guard conv.type == .bool, let show = conv.bool else {
+                let ln = lineForKeyAssignment("show_app_icons", in: source)
+                throw makeError(
+                    code: 43,
+                    detail: "In [panel], show_app_icons must be a boolean (true/false).",
+                    line: ln ?? lineForTableHeader("[panel]", in: source)
+                )
+            }
+            panel.showAppIcons = show
         }
         return panel
     }
