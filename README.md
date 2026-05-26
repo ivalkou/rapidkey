@@ -138,7 +138,7 @@ Each binding is an inline table with:
 - Exactly one of: `run`, `open`, `url`
 - `show_output` — with `run` only: show live command output (default `false`)
 - `work_dir` — with `run` only: working directory (absolute path or `~`)
-- `confirm` — with `run` only: confirmation dialog before executing (default `false`); `true` uses the binding title, or pass a custom string
+- `confirm` — with `run` only: confirmation step in the palette before executing (default `false`); `true` uses the binding title, or pass a custom string; press **y** to run, **n** or **Esc** to cancel
 
 Example:
 

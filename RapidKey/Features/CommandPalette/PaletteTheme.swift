@@ -18,7 +18,7 @@ enum PaletteTheme {
         case .light: .regularMaterial
         case .dark: .regularMaterial
         @unknown default: .regularMaterial
-        } 
+        }
     }
 
     /// Light: dark edge on bright blur; dark: soft highlight on dark blur.

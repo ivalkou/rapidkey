@@ -88,7 +88,7 @@ double_tap_cooldown_ms = 500
 #   url         — URL opened in the default browser
 #   show_output — with run only: open a live output dialog at start; updates while the command runs (default false)
 #   work_dir    — with run only: working directory for the shell (absolute path or ~; must exist)
-#   confirm     — with run only: ask before executing (default false); true uses title, or a custom string
+#   confirm     — with run only: confirm in the palette before executing (default false); y to run, n/esc to cancel
 [bindings]
 # Root-level leaf: one key runs the action immediately.
 "t" = { title = "Terminal", open = "Terminal" }

@@ -5,6 +5,7 @@ import Foundation
 enum PaletteBranch: Equatable {
     case config(prefix: [String])
     case runningApps(snapshot: [RunningAppEntry])
+    case confirmRun(ConfirmRunContext)
 }
 
 @MainActor
@@ -60,7 +61,19 @@ final class CommandPaletteState: ObservableObject {
             return prefix
         case .runningApps:
             return ["space"]
+        case .confirmRun(let context):
+            return context.breadcrumbPrefix
         }
+    }
+
+    var isConfirmingRun: Bool {
+        if case .confirmRun = branch { return true }
+        return false
+    }
+
+    var confirmContext: ConfirmRunContext? {
+        if case .confirmRun(let context) = branch { return context }
+        return nil
     }
 
     var emptyMessage: String {
@@ -69,6 +82,8 @@ final class CommandPaletteState: ObservableObject {
             return "No bindings in config"
         case .runningApps:
             return "No running apps"
+        case .confirmRun:
+            return ""
         }
     }
 
@@ -110,7 +125,26 @@ final class CommandPaletteState: ObservableObject {
             return s.isEmpty ? nil : s
         case .runningApps:
             return "Running Apps"
+        case .confirmRun:
+            return "Confirm"
         }
+    }
+
+    private static func breadcrumbPrefix(for branch: PaletteBranch) -> [String] {
+        switch branch {
+        case .config(let prefix):
+            return prefix
+        case .runningApps:
+            return ["space"]
+        case .confirmRun(let context):
+            return context.breadcrumbPrefix
+        }
+    }
+
+    private func dismissPalette(restoreFocus: Bool = true) {
+        cancelIdleTimer()
+        onDismiss?(restoreFocus, false)
+        reset(scheduleIdleTimeout: false)
     }
 
     private func refreshItems() {
@@ -128,6 +162,8 @@ final class CommandPaletteState: ObservableObject {
                     appIconRef: showIcons ? .processID(entry.pid) : nil
                 )
             }
+        case .confirmRun:
+            items = []
         }
     }
 
@@ -195,6 +231,11 @@ final class CommandPaletteState: ObservableObject {
 
     func handle(_ key: String) -> Bool {
         let key = PhysicalUSKeyMap.normalizeBindingToken(key)
+
+        if case .confirmRun(let context) = branch {
+            return handleConfirmRun(context, key: key)
+        }
+
         if key == "escape" {
             cancelIdleTimer()
             onDismiss?(true, false)
@@ -209,6 +250,8 @@ final class CommandPaletteState: ObservableObject {
                 branch = .config(prefix: Array(prefix.dropLast()))
             case .runningApps:
                 branch = .config(prefix: [])
+            case .confirmRun:
+                return true
             }
             refreshItems()
             armIdleTimer()
@@ -216,6 +259,9 @@ final class CommandPaletteState: ObservableObject {
         }
 
         switch branch {
+        case .confirmRun:
+            return false
+
         case .runningApps(let snapshot):
             guard let entry = snapshot.first(where: { $0.key == key }) else { return false }
             RunningAppsProvider.activate(pid: entry.pid)
@@ -236,16 +282,16 @@ final class CommandPaletteState: ObservableObject {
             let next = prefix + [key]
 
             if let action = cfg.bindings[next] {
-                if case .run(_, _, _, let confirm?) = action.kind,
-                   !RunConfirmation.userConfirmed(message: confirm) {
-                    armIdleTimer()
+                if case .run(_, _, _, let confirm?) = action.kind {
+                    cancelIdleTimer()
+                    branch = .confirmRun(ConfirmRunContext(
+                        message: confirm,
+                        action: action,
+                        breadcrumbPrefix: Self.breadcrumbPrefix(for: branch)
+                    ))
                     return true
                 }
-                ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
-                cancelIdleTimer()
-                let focus = Self.focusDisposition(after: action)
-                onDismiss?(focus.restoreFocus, focus.discardSavedFocus)
-                reset(scheduleIdleTimeout: false)
+                executeAction(action)
                 return true
             }
 
@@ -261,6 +307,28 @@ final class CommandPaletteState: ObservableObject {
 
             return false
         }
+    }
+
+    private func handleConfirmRun(_ context: ConfirmRunContext, key: String) -> Bool {
+        switch key {
+        case "y", "Y":
+            executeAction(context.action)
+            return true
+        case "n", "N", "escape":
+            dismissPalette(restoreFocus: true)
+            return true
+        default:
+            return false
+        }
+    }
+
+    private func executeAction(_ action: Action) {
+        let cfg = configStore.config
+        ActionRunner.run(action, shellPath: cfg.shellPath, panel: cfg.panel)
+        cancelIdleTimer()
+        let focus = Self.focusDisposition(after: action)
+        onDismiss?(focus.restoreFocus, focus.discardSavedFocus)
+        reset(scheduleIdleTimeout: false)
     }
 
     private static func focusDisposition(after action: Action) -> (restoreFocus: Bool, discardSavedFocus: Bool) {

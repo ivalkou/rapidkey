@@ -29,7 +29,10 @@ struct CommandPaletteView: View {
                 .padding(.top, 10)
                 .padding(.bottom, 12)
 
-            if state.items.isEmpty {
+            if let confirm = state.confirmContext {
+                ConfirmRunView(context: confirm)
+                    .padding(.bottom, 12)
+            } else if state.items.isEmpty {
                 Text(state.emptyMessage)
                     .foregroundStyle(.tertiary)
             } else {
@@ -37,15 +40,22 @@ struct CommandPaletteView: View {
                     _ = state.handle(key)
                 }
                 .animation(nil, value: state.items)
-              }
+            }
 
-            PaletteFooterView(
-                showSpace: state.isAtRoot,
-                onSpace: { _ = state.handle("space") },
-                showBack: !state.isAtRoot,
-                onBack: { _ = state.handle("backspace") },
-                onClose: { _ = state.handle("escape") }
-            )
+            if state.isConfirmingRun {
+                ConfirmRunFooterView(
+                    onConfirm: { _ = state.handle("y") },
+                    onCancel: { _ = state.handle("n") }
+                )
+            } else {
+                PaletteFooterView(
+                    showSpace: state.isAtRoot,
+                    onSpace: { _ = state.handle("space") },
+                    showBack: !state.isAtRoot,
+                    onBack: { _ = state.handle("backspace") },
+                    onClose: { _ = state.handle("escape") }
+                )
+            }
         }
         .padding(20)
         .animation(.easeOut(duration: 0.15), value: state.errorMessage)
