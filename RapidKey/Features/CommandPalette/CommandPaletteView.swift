@@ -59,9 +59,7 @@ struct CommandPaletteView: View {
         }
         .padding(20)
         .animation(.easeOut(duration: 0.15), value: state.errorMessage)
-        .background { panelFill }
-        .overlay { panelStroke }
-        .clipPanelChrome()
+        .panelChrome()
         .frame(minWidth: 360, maxWidth: paletteMaxWidth)
         .fixedSize(horizontal: true, vertical: true)
     }
@@ -69,40 +67,5 @@ struct CommandPaletteView: View {
     private var paletteMaxWidth: CGFloat {
         let screenWidth = PanelPositioning.screenUnderMouseOrMain()?.visibleFrame.width ?? 800
         return max(360, screenWidth - 32)
-    }
-
-    @ViewBuilder
-    private var panelFill: some View {
-        let material = PaletteTheme.panelMaterial(for: colorScheme)
-        if PaletteTheme.panelCornerRadius <= 0 {
-            Rectangle().fill(material)
-        } else {
-            RoundedRectangle(cornerRadius: PaletteTheme.panelCornerRadius, style: .continuous)
-                .fill(material)
-        }
-    }
-
-    @ViewBuilder
-    private var panelStroke: some View {
-        let stroke = PaletteTheme.panelStrokeGradient(for: colorScheme)
-        if PaletteTheme.panelCornerRadius <= 0 {
-            Rectangle().stroke(stroke, lineWidth: 1)
-        } else {
-            RoundedRectangle(cornerRadius: PaletteTheme.panelCornerRadius, style: .continuous)
-                .stroke(stroke, lineWidth: 1)
-        }
-    }
-}
-
-private extension View {
-    @ViewBuilder
-    func clipPanelChrome() -> some View {
-        if PaletteTheme.panelCornerRadius <= 0 {
-            clipShape(Rectangle())
-        } else {
-            clipShape(
-                RoundedRectangle(cornerRadius: PaletteTheme.panelCornerRadius, style: .continuous)
-            )
-        }
     }
 }

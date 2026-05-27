@@ -35,7 +35,7 @@ enum Leader: Equatable {
     }
 }
 
-enum HotkeyParseError: LocalizedError {
+enum HotkeyParseError: LocalizedError, Equatable {
     case empty
     case unknownModifier(String)
     case unknownKey(String)

@@ -37,7 +37,7 @@ final class ConfigStore: ObservableObject {
     }
 
     private static func emergencyFallback() -> Config {
-        let leader = try! ConfigLoader.parseLeader("alt+space")
+        let leader = try! LeaderParser.parseLeader("alt+space")
         return Config(leader: leader, bindings: [:], groupTitles: [:])
     }
 
@@ -106,6 +106,7 @@ final class ConfigStore: ObservableObject {
                 self.lastError = nil
             } catch {
                 log.error("Config reload failed: \(String(describing: error))")
+                self.config = self.lastGood
                 self.lastError = error.localizedDescription
             }
         }

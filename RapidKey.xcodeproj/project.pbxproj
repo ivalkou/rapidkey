@@ -8,16 +8,33 @@
 
 /* Begin PBXBuildFile section */
 		380E804D2FB4C6FA0038336A /* TOMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = 380E804E2FB4C6FA0038336A /* TOMLKit */; };
+		381E90502FB4C7000038336A /* TOMLKit in Frameworks */ = {isa = PBXBuildFile; productRef = 380E804E2FB4C6FA0038336A /* TOMLKit */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		381E904F2FB4C7000038336A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 380E801F2FB4C6F90038336A /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 380E80262FB4C6F90038336A;
+			remoteInfo = RapidKey;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
 		380E80272FB4C6F90038336A /* RapidKey.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = RapidKey.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		381E90422FB4C7000038336A /* RapidKeyTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = RapidKeyTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		380E80292FB4C6F90038336A /* RapidKey */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
 			path = RapidKey;
+			sourceTree = "<group>";
+		};
+		381E90432FB4C7000038336A /* RapidKeyTests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = RapidKeyTests;
 			sourceTree = "<group>";
 		};
 /* End PBXFileSystemSynchronizedRootGroup section */
@@ -31,6 +48,14 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		381E90452FB4C7000038336A /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				381E90502FB4C7000038336A /* TOMLKit in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
@@ -38,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				380E80292FB4C6F90038336A /* RapidKey */,
+				381E90432FB4C7000038336A /* RapidKeyTests */,
 				380E80282FB4C6F90038336A /* Products */,
 			);
 			sourceTree = "<group>";
@@ -46,6 +72,7 @@
 			isa = PBXGroup;
 			children = (
 				380E80272FB4C6F90038336A /* RapidKey.app */,
+				381E90422FB4C7000038336A /* RapidKeyTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -76,7 +103,38 @@
 			productReference = 380E80272FB4C6F90038336A /* RapidKey.app */;
 			productType = "com.apple.product-type.application";
 		};
+		381E90412FB4C7000038336A /* RapidKeyTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 381E90482FB4C7000038336A /* Build configuration list for PBXNativeTarget "RapidKeyTests" */;
+			buildPhases = (
+				381E90442FB4C7000038336A /* Sources */,
+				381E90452FB4C7000038336A /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				381E904E2FB4C7000038336A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				381E90432FB4C7000038336A /* RapidKeyTests */,
+			);
+			name = RapidKeyTests;
+			packageProductDependencies = (
+				380E804E2FB4C6FA0038336A /* TOMLKit */,
+			);
+			productName = RapidKeyTests;
+			productReference = 381E90422FB4C7000038336A /* RapidKeyTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXTargetDependency section */
+		381E904E2FB4C7000038336A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 380E80262FB4C6F90038336A /* RapidKey */;
+			targetProxy = 381E904F2FB4C7000038336A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin PBXProject section */
 		380E801F2FB4C6F90038336A /* Project object */ = {
@@ -88,6 +146,10 @@
 				TargetAttributes = {
 					380E80262FB4C6F90038336A = {
 						CreatedOnToolsVersion = 26.4;
+					};
+					381E90412FB4C7000038336A = {
+						CreatedOnToolsVersion = 26.4;
+						TestTargetID = 380E80262FB4C6F90038336A;
 					};
 				};
 			};
@@ -109,6 +171,7 @@
 			projectRoot = "";
 			targets = (
 				380E80262FB4C6F90038336A /* RapidKey */,
+				381E90412FB4C7000038336A /* RapidKeyTests */,
 			);
 		};
 /* End PBXProject section */
@@ -125,6 +188,13 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		380E80232FB4C6F90038336A /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		381E90442FB4C7000038336A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -318,6 +388,48 @@
 			};
 			name = Release;
 		};
+		381E90462FB4C7000038336A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 16;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 0.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = org.soniejka.RapidKeyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RapidKey.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RapidKey";
+			};
+			name = Debug;
+		};
+		381E90472FB4C7000038336A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 16;
+				GENERATE_INFOPLIST_FILE = YES;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/../Frameworks",
+					"@loader_path/../Frameworks",
+				);
+				MACOSX_DEPLOYMENT_TARGET = 15.6;
+				MARKETING_VERSION = 0.2.3;
+				PRODUCT_BUNDLE_IDENTIFIER = org.soniejka.RapidKeyTests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SWIFT_VERSION = 5.0;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/RapidKey.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/RapidKey";
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -335,6 +447,15 @@
 			buildConfigurations = (
 				380E80332FB4C6FA0038336A /* Debug */,
 				380E80342FB4C6FA0038336A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		381E90482FB4C7000038336A /* Build configuration list for PBXNativeTarget "RapidKeyTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				381E90462FB4C7000038336A /* Debug */,
+				381E90472FB4C7000038336A /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

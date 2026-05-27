@@ -27,95 +27,13 @@ enum ConfigPaths {
 
 """#
 
-    private static let configTemplateBody = #"""
-# Global shortcut to open the command palette.
-#
-# Variants:
-#   chord:               "alt+space"        modifiers: ctrl|alt|cmd|shift; key: a-z, A-Z, 0-9,
-#                                           punctuation (= - [ ] ' ; \ , / . `),
-#                                           Shift symbols (! @ # $ % ^ & * ( ) _ + { } | : " < > ? ~),
-#                                           space, tab, enter, esc, f1-f12.
-#                                           Keys are US QWERTY physical positions.
-#                                           No extra permissions required.
-#
-#   double-tap modifier: "doubletap+ctrl" | "doubletap+alt"
-#                      | "doubletap+cmd"  | "doubletap+shift"
-#                                           REQUIRES: System Settings -> Privacy & Security
-#                                           -> Input Monitoring -> enable RapidKey.
-#                                           macOS will show a permission dialog when this leader
-#                                           is active; until granted, the leader will NOT fire.
-#                                           Use the menu bar item "Grant Input Monitoring..."
-#                                           to show the dialog again.
-#                                           Tap timing: [behavior] double_tap_ms (max gap, default 350),
-#                                           double_tap_min_ms (debounce, default 80),
-#                                           double_tap_cooldown_ms (after trigger, default 500).
-leader = "alt+space"
-
-# Shell for run commands (default sh). Name on PATH or absolute path.
-# shell = "zsh"
-
-# Start RapidKey when you log in (uncomment to enable).
-# launch_at_login = true
-
-# Where the command palette and command output panel appear on screen.
-[panel]
-position = "center"   # center | cursor | top | bottom
-# show_app_icons = false  # disable bundle icons for open bindings and running apps (default true)
-
-# Auto-close the palette after idle time (milliseconds). 0 = never auto-close.
-# double_tap_ms: max gap between modifier taps for doubletap+ leader (default 350).
-# double_tap_min_ms: min gap; shorter pairs are ignored as bounce (default 80).
-# double_tap_cooldown_ms: ignore new double-taps after a trigger (default 500).
-[behavior]
-timeout_ms = 0
-double_tap_ms = 350
-double_tap_min_ms = 80
-double_tap_cooldown_ms = 500
-
-# Optional section titles for key prefixes (shown in the palette header).
-# A group key must have bindings under that prefix (e.g. "f" needs "f h", "f d", …).
-[groups]
-"f" = "Files"
-"w" = "Web"
-"x" = "RapidKey Config"
-
-# Key sequences and actions. Keys are space-separated (e.g. "f h" = press f, then h).
-# Quote TOML keys that need it: "1", "!", "[", "g \"".
-# Each binding is an inline table with:
-#   title       — label in the palette (required)
-#   run         — shell command via configured shell -c (exactly one of run | open | url)
-#   open        — application name (macOS open -a)
-#   url         — URL opened in the default browser
-#   show_output — with run only: open a live output dialog at start; updates while the command runs (default false)
-#   work_dir    — with run only: working directory for the shell (absolute path or ~; must exist)
-#   confirm     — with run only: confirm in the palette before executing (default false); y to run, n/esc to cancel
-[bindings]
-# Root-level leaf: one key runs the action immediately.
-"t" = { title = "Terminal", open = "Terminal" }
-"s" = { title = "Safari",   open = "Safari" }
-# Examples with digits / Shift symbols (quote keys in TOML):
-# "1" = { title = "Calculator", open = "Calculator" }
-# "!" = { title = "Notes",      open = "Notes" }
-
-# Group "f" — shell commands (run).
-"f h" = { title = "Home",      run = "open ~" }
-"f d" = { title = "Downloads", run = "open ~/Downloads" }
-"f l" = { title = "List Home", run = "ls ~", show_output = true }
-"f p" = { title = "PWD Home",  run = "pwd", show_output = true, work_dir = "~" }
-
-# Group "w" — URLs.
-"w g" = { title = "Google", url = "https://www.google.com" }
-"w c" = { title = "GitHub", url = "https://github.com" }
-
-# Group "x" — config maintenance.
-# Edit Config: open -t uses the default text editor (often TextEdit). For nvim or another editor, replace run:
-#   run = "nvim ~/.config/rapidkey/rapidkey.toml"
-#   run = "open -a MacVim ~/.config/rapidkey/rapidkey.toml"
-#   run = "\"$EDITOR\" ~/.config/rapidkey/rapidkey.toml"   # if shell expands $EDITOR
-"x e" = { title = "Edit Config",             run = "open -t ~/.config/rapidkey/rapidkey.toml" }
-"x r" = { title = "Open Example",            run = "open -t ~/.config/rapidkey/example.toml" }
-"x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml", confirm = "Delete rapidkey.toml?" }
-"""#
+    private static let configTemplateBody: String = {
+        guard let url = Bundle.main.url(forResource: "config-body", withExtension: "toml"),
+              let body = try? String(contentsOf: url, encoding: .utf8) else {
+            fatalError("Missing config-body.toml in app bundle")
+        }
+        return body
+    }()
 
     /// Reference config with full documentation. Rewritten on every app launch; not read by the app.
     static let exampleConfigToml = configTemplateHeaderExample + configTemplateBody

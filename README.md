@@ -205,10 +205,11 @@ If Input Monitoring is required but not granted, the leader will not fire. Use *
 ```
 RapidKey/
   App/                      Entry point, menu bar, AppDelegate
-  Models/                   Config, Action, Hotkey
+  Models/                   Config, Action, Leader, palette models
   Services/                 Config load/watch, hotkeys, shell execution
-  Features/CommandPalette/  Command palette UI
-  UI/                       Panel, key catcher
+  Features/CommandPalette/  Command palette UI and state
+  UI/                       Floating panels, design tokens, key catcher
+  Resources/                Bundled default and example TOML templates
 ```
 
 ## License

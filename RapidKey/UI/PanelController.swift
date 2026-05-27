@@ -10,29 +10,10 @@ final class PanelController: NSWindowController, NSWindowDelegate {
         self.state = CommandPaletteState(configStore: configStore)
         let rootView = CommandPaletteView(state: state)
 
-        let panel = CommandPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320),
-            // `.titled` forces system-rounded window chrome; borderless keeps corners square with our SwiftUI clip.
-            styleMask: [.nonactivatingPanel, .borderless],
-            backing: .buffered,
-            defer: false
+        let panel = FloatingPanelSetup.makePanel(
+            contentRect: NSRect(x: 0, y: 0, width: 420, height: 320)
         )
-
-        panel.isFloatingPanel = true
-        panel.level = .statusBar
-        panel.hidesOnDeactivate = false
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .transient]
-        panel.isMovableByWindowBackground = true
-        panel.collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary]
-        panel.backgroundColor = .clear
-        panel.isOpaque = false
-        panel.hasShadow = true
-
-        let hostingView = NSHostingView(rootView: rootView)
-        if #available(macOS 13.0, *) {
-            hostingView.sizingOptions = [.minSize, .preferredContentSize]
-        }
-        panel.contentView = hostingView
+        panel.contentView = FloatingPanelSetup.makeHostingView(rootView: rootView)
 
         super.init(window: panel)
 
@@ -59,7 +40,7 @@ final class PanelController: NSWindowController, NSWindowDelegate {
     }
 
     func toggle() {
-        guard let panel = window as? CommandPanel else { return }
+        guard let panel = window as? FloatingPanel else { return }
 
         if panel.isVisible {
             hide(restoreFocus: true)
@@ -69,21 +50,15 @@ final class PanelController: NSWindowController, NSWindowDelegate {
     }
 
     func show() {
-        guard let panel = window as? CommandPanel else { return }
+        guard let panel = window as? FloatingPanel else { return }
 
         state.cancelIdleTimer()
         state.reset(scheduleIdleTimeout: false)
-        positionPanel(panel)
-        PreviousAppFocus.capture()
-        panel.orderFrontRegardless()
-        panel.makeKeyAndOrderFront(nil)
-        NSApp.activate(ignoringOtherApps: true)
+        FloatingPanelSetup.present(panel, using: configStore.config.panel)
         state.scheduleIdleTimeoutIfNeeded()
 
         DispatchQueue.main.async { [weak self] in
-            guard let self, let panel = self.window as? NSPanel else { return }
-            self.positionPanel(panel)
-            self.state.scheduleIdleTimeoutIfNeeded()
+            self?.state.scheduleIdleTimeoutIfNeeded()
         }
     }
 
@@ -95,9 +70,5 @@ final class PanelController: NSWindowController, NSWindowDelegate {
         } else if discardSavedFocus {
             PreviousAppFocus.discard()
         }
-    }
-
-    private func positionPanel(_ panel: NSPanel) {
-        PanelPositioning.position(panel, using: configStore.config.panel)
     }
 }

@@ -1,4 +1,11 @@
+import Foundation
 import SwiftUI
+
+struct ConfirmRunContext: Equatable {
+    let message: String
+    let action: Action
+    let breadcrumbPrefix: [String]
+}
 
 struct ConfirmRunView: View {
     let context: ConfirmRunContext
@@ -21,19 +28,11 @@ struct ConfirmRunFooterView: View {
     let onConfirm: () -> Void
     let onCancel: () -> Void
 
-    @Environment(\.colorScheme) private var colorScheme
-
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            Divider()
-                .opacity(PaletteTheme.dividerOpacity(for: colorScheme) * 0.85)
-
-            HStack {
-                ServiceKeyChip(key: "y", label: "run", action: onConfirm)
-                Spacer(minLength: 0)
-                ServiceKeyChip(key: "n/esc", label: "cancel", action: onCancel)
-            }
-            .padding(.top, 10)
+        PaletteServiceFooter {
+            ServiceKeyChip(key: "y", label: "run", action: onConfirm)
+            Spacer(minLength: 0)
+            ServiceKeyChip(key: "n/esc", label: "cancel", action: onCancel)
         }
     }
 }

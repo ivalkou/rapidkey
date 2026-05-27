@@ -1,5 +1,4 @@
 import AppKit
-import Carbon
 import Foundation
 import os
 import TOMLKit
@@ -7,110 +6,8 @@ import TOMLKit
 private let log = Logger(subsystem: "org.soniejka.RapidKey", category: "Config")
 
 enum ConfigLoader {
-    private static let configPathLabel = "~/.config/rapidkey/rapidkey.toml"
-
-    private static func userFacingMessage(detail: String, line: Int?) -> String {
-        if let line {
-            return "Config error (\(configPathLabel)), line \(line): \(detail)"
-        }
-        return "Config error (\(configPathLabel)): \(detail)"
-    }
-
-    private static func makeError(code: Int, detail: String, line: Int?) -> NSError {
-        NSError(
-            domain: "RapidKey",
-            code: code,
-            userInfo: [NSLocalizedDescriptionKey: userFacingMessage(detail: detail, line: line)]
-        )
-    }
-
-    /// Line of a `key = value` or `"key" = ...` assignment (1-based), if found.
-    private static func lineForKeyAssignment(_ key: String, in source: String) -> Int? {
-        var lineNo = 0
-        for line in source.split(separator: "\n", omittingEmptySubsequences: false) {
-            lineNo += 1
-            let t = String(line).trimmingCharacters(in: .whitespaces)
-            if t.isEmpty || t.hasPrefix("#") { continue }
-            if t.hasPrefix("\"\(key)\"") || t.hasPrefix("'\(key)'") { return lineNo }
-            if t.hasPrefix("\(key) =") || t.hasPrefix("\(key)=") { return lineNo }
-            guard let eq = t.firstIndex(of: "=") else { continue }
-            let lhs = t[..<eq].trimmingCharacters(in: .whitespaces)
-            if lhs == key || lhs == "\"\(key)\"" || lhs == "'\(key)'" { return lineNo }
-        }
-        return nil
-    }
-
-    private static func lineForTableHeader(_ header: String, in source: String) -> Int? {
-        var lineNo = 0
-        for line in source.split(separator: "\n", omittingEmptySubsequences: false) {
-            lineNo += 1
-            let t = String(line).trimmingCharacters(in: .whitespaces)
-            if t == header { return lineNo }
-        }
-        return nil
-    }
-
     static func parseLeader(_ raw: String) throws -> Leader {
-        let trimmed = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !trimmed.isEmpty else { throw HotkeyParseError.empty }
-
-        if trimmed.hasPrefix("doubletap+") || trimmed.hasPrefix("2tap+") {
-            let prefix = trimmed.hasPrefix("doubletap+") ? "doubletap+" : "2tap+"
-            let modPart = String(trimmed.dropFirst(prefix.count))
-            guard !modPart.isEmpty, !modPart.contains("+") else {
-                throw HotkeyParseError.unknownLeader(raw)
-            }
-            switch modPart {
-            case "ctrl", "control": return .doubleTapModifier(.ctrl)
-            case "alt", "option": return .doubleTapModifier(.alt)
-            case "cmd", "command": return .doubleTapModifier(.cmd)
-            case "shift": return .doubleTapModifier(.shift)
-            default: throw HotkeyParseError.unknownLeader(raw)
-            }
-        }
-
-        return try parseChord(trimmed)
-    }
-
-    private static func parseChord(_ raw: String) throws -> Leader {
-        let parts = raw
-            .split(separator: "+", omittingEmptySubsequences: false)
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() }
-            .filter { !$0.isEmpty }
-
-        guard let last = parts.last else { throw HotkeyParseError.empty }
-        guard parts.count >= 1 else { throw HotkeyParseError.empty }
-
-        if parts.count == 1 {
-            switch last {
-            case "ctrl", "control", "alt", "option", "cmd", "command", "shift":
-                throw HotkeyParseError.bareModifierNotAllowed
-            default:
-                break
-            }
-        }
-
-        var mods: UInt32 = 0
-        for p in parts.dropLast() {
-            switch p {
-            case "ctrl", "control": mods |= UInt32(controlKey)
-            case "alt", "option": mods |= UInt32(optionKey)
-            case "cmd", "command": mods |= UInt32(cmdKey)
-            case "shift": mods |= UInt32(shiftKey)
-            default: throw HotkeyParseError.unknownModifier(p)
-            }
-        }
-
-        let keyCode = try keyCodeForToken(last)
-        return .chord(keyCode: keyCode, modifiers: mods)
-    }
-
-    /// US QWERTY virtual key codes (same as `RegisterEventHotKey` / `NSEvent.keyCode`).
-    private static func keyCodeForToken(_ token: String) throws -> UInt32 {
-        guard let vk = PhysicalUSKeyMap.keyCode(for: token) else {
-            throw HotkeyParseError.unknownKey(token)
-        }
-        return vk
+        try LeaderParser.parseLeader(raw)
     }
 
     private static func parseSequenceKey(_ key: String) -> [String] {
@@ -147,8 +44,8 @@ enum ConfigLoader {
 
             for token in seq {
                 guard PhysicalUSKeyMap.isKnownToken(token) else {
-                    let ln = lineForKeyAssignment(key, in: source)
-                    throw makeError(
+                    let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                    throw ConfigParseSupport.makeError(
                         code: 8,
                         detail: "Binding \"\(key)\": unknown key token \"\(token)\".",
                         line: ln
@@ -157,17 +54,17 @@ enum ConfigLoader {
             }
 
             guard value.type == .table, let inner = value.table else {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 1,
                     detail: "In [bindings], key \"\(key)\" must be an inline table `{ title = …, run|open|url = … }`.",
-                    line: ln ?? lineForTableHeader("[bindings]", in: source)
+                    line: ln ?? ConfigParseSupport.lineForTableHeader("[bindings]", in: source)
                 )
             }
 
             guard let title = inner["title"]?.string, !title.isEmpty else {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 2,
                     detail: "Binding \"\(key)\" must have a non-empty title field.",
                     line: ln
@@ -181,8 +78,8 @@ enum ConfigLoader {
             let showOutput: Bool?
             if let conv = inner["show_output"] {
                 guard conv.type == .bool, let b = conv.bool else {
-                    let ln = lineForKeyAssignment(key, in: source)
-                    throw makeError(
+                    let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                    throw ConfigParseSupport.makeError(
                         code: 5,
                         detail: "Binding \"\(key)\": show_output must be a boolean (true/false).",
                         line: ln
@@ -195,8 +92,8 @@ enum ConfigLoader {
 
             let setCount = [run, open, urlStr].compactMap { $0 }.count
             guard setCount == 1 else {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 3,
                     detail: "Binding \"\(key)\" must set exactly one of: run, open, or url.",
                     line: ln
@@ -204,8 +101,8 @@ enum ConfigLoader {
             }
 
             if showOutput != nil, run == nil {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 6,
                     detail: "Binding \"\(key)\": show_output is only valid with 'run'.",
                     line: ln
@@ -216,8 +113,8 @@ enum ConfigLoader {
             let confirmMessage = try parseConfirm(key: key, title: title, inner: inner, source: source, run: run)
 
             if confirmMessage != nil, run == nil {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 11,
                     detail: "Binding \"\(key)\": confirm is only valid with 'run'.",
                     line: ln
@@ -225,8 +122,8 @@ enum ConfigLoader {
             }
 
             if workDir != nil, run == nil {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 7,
                     detail: "Binding \"\(key)\": work_dir is only valid with 'run'.",
                     line: ln
@@ -241,8 +138,8 @@ enum ConfigLoader {
             } else if let urlStr, let url = URL(string: urlStr), url.scheme != nil {
                 kind = .url(url)
             } else {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 4,
                     detail: "Binding \"\(key)\" has an invalid URL.",
                     line: ln
@@ -258,8 +155,8 @@ enum ConfigLoader {
         guard let conv = inner["work_dir"] else { return nil }
 
         guard conv.type == .string, let raw = conv.string, !raw.isEmpty else {
-            let ln = lineForKeyAssignment(key, in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+            throw ConfigParseSupport.makeError(
                 code: 8,
                 detail: "Binding \"\(key)\": work_dir must be a non-empty string.",
                 line: ln
@@ -268,8 +165,8 @@ enum ConfigLoader {
 
         let expanded = (raw as NSString).expandingTildeInPath
         guard expanded.hasPrefix("/") else {
-            let ln = lineForKeyAssignment(key, in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+            throw ConfigParseSupport.makeError(
                 code: 9,
                 detail: "Binding \"\(key)\": work_dir must be an absolute path or start with ~ (got \"\(raw)\").",
                 line: ln
@@ -278,8 +175,8 @@ enum ConfigLoader {
 
         var isDirectory: ObjCBool = false
         guard FileManager.default.fileExists(atPath: expanded, isDirectory: &isDirectory), isDirectory.boolValue else {
-            let ln = lineForKeyAssignment(key, in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+            throw ConfigParseSupport.makeError(
                 code: 10,
                 detail: "Binding \"\(key)\": work_dir does not exist or is not a directory (\"\(raw)\").",
                 line: ln
@@ -300,8 +197,8 @@ enum ConfigLoader {
 
         if conv.type == .bool {
             guard let enabled = conv.bool else {
-                let ln = lineForKeyAssignment(key, in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+                throw ConfigParseSupport.makeError(
                     code: 12,
                     detail: "Binding \"\(key)\": confirm must be a boolean or non-empty string.",
                     line: ln
@@ -314,8 +211,8 @@ enum ConfigLoader {
             return message
         }
 
-        let ln = lineForKeyAssignment(key, in: source)
-        throw makeError(
+        let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+        throw ConfigParseSupport.makeError(
             code: 12,
             detail: "Binding \"\(key)\": confirm must be a boolean or non-empty string.",
             line: ln
@@ -347,14 +244,14 @@ enum ConfigLoader {
     private static func parsePanelPositionString(_ raw: String, source: String, line: Int?) throws -> PanelPosition {
         let s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !s.isEmpty else {
-            throw makeError(
+            throw ConfigParseSupport.makeError(
                 code: 41,
                 detail: "position must be a non-empty string.",
                 line: line
             )
         }
         guard let pos = PanelPosition(rawValue: s.lowercased()) else {
-            throw makeError(
+            throw ConfigParseSupport.makeError(
                 code: 40,
                 detail: "Invalid position: expected one of: center, cursor, top, bottom.",
                 line: line
@@ -367,23 +264,23 @@ enum ConfigLoader {
         var panel = PanelConfig()
         if let conv = table["position"] {
             guard conv.type == .string, let raw = conv.string else {
-                let ln = lineForKeyAssignment("position", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment("position", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 41,
                     detail: "In [panel], position must be a non-empty string.",
-                    line: ln ?? lineForTableHeader("[panel]", in: source)
+                    line: ln ?? ConfigParseSupport.lineForTableHeader("[panel]", in: source)
                 )
             }
-            let ln = lineForKeyAssignment("position", in: source)
+            let ln = ConfigParseSupport.lineForKeyAssignment("position", in: source)
             panel.position = try parsePanelPositionString(raw, source: source, line: ln)
         }
         if let conv = table["show_app_icons"] {
             guard conv.type == .bool, let show = conv.bool else {
-                let ln = lineForKeyAssignment("show_app_icons", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment("show_app_icons", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 43,
                     detail: "In [panel], show_app_icons must be a boolean (true/false).",
-                    line: ln ?? lineForTableHeader("[panel]", in: source)
+                    line: ln ?? ConfigParseSupport.lineForTableHeader("[panel]", in: source)
                 )
             }
             panel.showAppIcons = show
@@ -399,16 +296,16 @@ enum ConfigLoader {
         nonPositiveCode: Int
     ) throws -> TimeInterval {
         guard conv.type == .int, let ms = conv.int else {
-            let ln = lineForKeyAssignment(key, in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+            throw ConfigParseSupport.makeError(
                 code: invalidTypeCode,
                 detail: "In [behavior], \(key) must be an integer (milliseconds).",
-                line: ln ?? lineForTableHeader("[behavior]", in: source)
+                line: ln ?? ConfigParseSupport.lineForTableHeader("[behavior]", in: source)
             )
         }
         guard ms > 0 else {
-            let ln = lineForKeyAssignment(key, in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment(key, in: source)
+            throw ConfigParseSupport.makeError(
                 code: nonPositiveCode,
                 detail: "\(key) must be greater than 0.",
                 line: ln
@@ -421,16 +318,16 @@ enum ConfigLoader {
         var behavior = BehaviorConfig()
         if let conv = table["timeout_ms"] {
             guard conv.type == .int, let ms = conv.int else {
-                let ln = lineForKeyAssignment("timeout_ms", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment("timeout_ms", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 43,
                     detail: "In [behavior], timeout_ms must be an integer (milliseconds).",
-                    line: ln ?? lineForTableHeader("[behavior]", in: source)
+                    line: ln ?? ConfigParseSupport.lineForTableHeader("[behavior]", in: source)
                 )
             }
             guard ms >= 0 else {
-                let ln = lineForKeyAssignment("timeout_ms", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForKeyAssignment("timeout_ms", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 44,
                     detail: "timeout_ms cannot be negative.",
                     line: ln
@@ -466,9 +363,9 @@ enum ConfigLoader {
             )
         }
         if behavior.doubleTapMinGap > behavior.doubleTapWindow {
-            let ln = lineForKeyAssignment("double_tap_min_ms", in: source)
-                ?? lineForKeyAssignment("double_tap_ms", in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment("double_tap_min_ms", in: source)
+                ?? ConfigParseSupport.lineForKeyAssignment("double_tap_ms", in: source)
+            throw ConfigParseSupport.makeError(
                 code: 54,
                 detail: "double_tap_min_ms cannot be greater than double_tap_ms.",
                 line: ln
@@ -478,11 +375,11 @@ enum ConfigLoader {
     }
 
     private static func parseShell(_ root: TOMLTable, source: String) throws -> String {
-        let line = lineForKeyAssignment("shell", in: source)
+        let line = ConfigParseSupport.lineForKeyAssignment("shell", in: source)
         let raw: String
         if let conv = root["shell"] {
             guard conv.type == .string, let value = conv.string, !value.isEmpty else {
-                throw makeError(
+                throw ConfigParseSupport.makeError(
                     code: 47,
                     detail: "shell must be a non-empty string.",
                     line: line
@@ -500,7 +397,7 @@ enum ConfigLoader {
         if name.contains("/") || name.hasPrefix("~") {
             let path = (name as NSString).expandingTildeInPath
             guard FileManager.default.isExecutableFile(atPath: path) else {
-                throw makeError(
+                throw ConfigParseSupport.makeError(
                     code: 48,
                     detail: "shell is not executable or does not exist (\"\(raw)\").",
                     line: line
@@ -518,7 +415,7 @@ enum ConfigLoader {
             }
         }
 
-        throw makeError(
+        throw ConfigParseSupport.makeError(
             code: 49,
             detail: "shell \"\(raw)\" not found in PATH.",
             line: line
@@ -564,8 +461,8 @@ enum ConfigLoader {
     private static func parseLaunchAtLogin(_ root: TOMLTable, source: String) throws -> Bool {
         guard let conv = root["launch_at_login"] else { return false }
         guard conv.type == .bool, let b = conv.bool else {
-            let ln = lineForKeyAssignment("launch_at_login", in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment("launch_at_login", in: source)
+            throw ConfigParseSupport.makeError(
                 code: 45,
                 detail: "launch_at_login must be a boolean (true/false).",
                 line: ln
@@ -576,8 +473,8 @@ enum ConfigLoader {
 
     private static func parseConfigFromTOML(_ root: TOMLTable, source: String) throws -> Config {
         guard let leaderStr = root["leader"]?.string, !leaderStr.isEmpty else {
-            let ln = lineForKeyAssignment("leader", in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForKeyAssignment("leader", in: source)
+            throw ConfigParseSupport.makeError(
                 code: 10,
                 detail: "leader is missing or empty (global shortcut to open the panel).",
                 line: ln
@@ -586,16 +483,16 @@ enum ConfigLoader {
 
         let leader: Leader
         do {
-            leader = try parseLeader(leaderStr)
+            leader = try LeaderParser.parseLeader(leaderStr)
         } catch let e as HotkeyParseError {
-            let ln = lineForKeyAssignment("leader", in: source)
+            let ln = ConfigParseSupport.lineForKeyAssignment("leader", in: source)
             let detail = e.errorDescription ?? String(describing: e)
-            throw makeError(code: 11, detail: "Invalid leader: \(detail)", line: ln)
+            throw ConfigParseSupport.makeError(code: 11, detail: "Invalid leader: \(detail)", line: ln)
         }
 
         guard let bindingsTable = root["bindings"]?.table else {
-            let ln = lineForTableHeader("[bindings]", in: source)
-            throw makeError(
+            let ln = ConfigParseSupport.lineForTableHeader("[bindings]", in: source)
+            throw ConfigParseSupport.makeError(
                 code: 12,
                 detail: "Missing [bindings] section with a bindings table.",
                 line: ln
@@ -616,8 +513,8 @@ enum ConfigLoader {
         let panel: PanelConfig
         if let conv = root["panel"] {
             guard conv.type == .table, let t = conv.table else {
-                let ln = lineForTableHeader("[panel]", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForTableHeader("[panel]", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 42,
                     detail: "The [panel] section must be a TOML table.",
                     line: ln
@@ -631,8 +528,8 @@ enum ConfigLoader {
         let behavior: BehaviorConfig
         if let conv = root["behavior"] {
             guard conv.type == .table, let t = conv.table else {
-                let ln = lineForTableHeader("[behavior]", in: source)
-                throw makeError(
+                let ln = ConfigParseSupport.lineForTableHeader("[behavior]", in: source)
+                throw ConfigParseSupport.makeError(
                     code: 46,
                     detail: "The [behavior] section must be a TOML table.",
                     line: ln
@@ -663,7 +560,7 @@ enum ConfigLoader {
         do {
             data = try Data(contentsOf: url)
         } catch {
-            throw makeError(
+            throw ConfigParseSupport.makeError(
                 code: 19,
                 detail: "Could not read the file (\(error.localizedDescription)).",
                 line: nil
@@ -671,7 +568,7 @@ enum ConfigLoader {
         }
 
         guard let source = String(data: data, encoding: .utf8) else {
-            throw makeError(code: 20, detail: "The file is not valid UTF-8.", line: nil)
+            throw ConfigParseSupport.makeError(code: 20, detail: "The file is not valid UTF-8.", line: nil)
         }
 
         let root: TOMLTable
@@ -679,7 +576,7 @@ enum ConfigLoader {
             root = try TOMLTable(string: source)
         } catch let parseError as TOMLParseError {
             let line = parseError.source.begin.line
-            throw makeError(code: 30, detail: parseError.description, line: line)
+            throw ConfigParseSupport.makeError(code: 30, detail: parseError.description, line: line)
         }
 
         return try parseConfigFromTOML(root, source: source)

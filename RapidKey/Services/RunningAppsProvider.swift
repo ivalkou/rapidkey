@@ -1,12 +1,6 @@
 import AppKit
 import Foundation
 
-struct RunningAppEntry: Equatable {
-    let key: String
-    let title: String
-    let pid: pid_t
-}
-
 enum RunningAppsProvider {
     static let assignmentKeys: [String] = {
         var keys = (1...9).map(String.init) + ["0"]
