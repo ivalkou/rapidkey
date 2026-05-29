@@ -49,8 +49,7 @@ struct MenuBarContent: View {
         case .updateAvailable(let version, _):
             Button("Update Available: v\(version)") {
                 updateChecker.presentUpdateAlertIfAvailable(
-                    shellPath: configStore.config.shellPath,
-                    panel: configStore.config.panel
+                    shellPath: configStore.config.shellPath
                 )
             }
         case .checking:

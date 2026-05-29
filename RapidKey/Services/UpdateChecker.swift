@@ -101,15 +101,14 @@ final class UpdateChecker: ObservableObject {
         }
     }
 
-    func presentUpdateAlertIfAvailable(shellPath: String, panel: PanelConfig) {
+    func presentUpdateAlertIfAvailable(shellPath: String) {
         guard case .updateAvailable(let version, let url) = status else { return }
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         Self.presentUpdateAlert(
             version: version,
             currentVersion: currentVersion,
             url: url,
-            shellPath: shellPath,
-            panel: panel
+            shellPath: shellPath
         )
     }
 
@@ -130,8 +129,7 @@ final class UpdateChecker: ObservableObject {
         version: String,
         currentVersion: String,
         url: URL,
-        shellPath: String,
-        panel: PanelConfig
+        shellPath: String
     ) {
         let alert = NSAlert()
         alert.messageText = "Update Available: v\(version)"
@@ -153,13 +151,36 @@ final class UpdateChecker: ObservableObject {
         case .alertSecondButtonReturn:
             NSWorkspace.shared.open(url)
         case .alertThirdButtonReturn:
-            ShellExecutor.runDetached(
-                command: brewUpgradeCommand,
-                shellPath: shellPath,
-                panel: panel
-            )
+            launchDetachedBrewUpgrade(shellPath: shellPath)
         default:
             break
+        }
+    }
+
+    /// Runs `brew upgrade` fully detached from RapidKey so it survives the app being
+    /// quit by the cask's `uninstall quit:` step during the upgrade.
+    private static func launchDetachedBrewUpgrade(shellPath: String) {
+        let logPath = (NSTemporaryDirectory() as NSString).appendingPathComponent("rapidkey-upgrade.log")
+        let inner = brewUpgradeCommand.replacingOccurrences(of: "'", with: "'\\''")
+        let script = "nohup \"\(shellPath)\" -lc '\(inner)' >\"\(logPath)\" 2>&1 &"
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/bin/sh")
+        process.arguments = ["-c", script]
+        process.environment = ShellProcessEnvironment.applyingDefaults(shellPath: shellPath)
+        process.standardInput = FileHandle.nullDevice
+        process.standardOutput = FileHandle.nullDevice
+        process.standardError = FileHandle.nullDevice
+
+        do {
+            try process.run()
+            DispatchQueue.global(qos: .utility).async {
+                process.waitUntilExit()
+            }
+        } catch {
+            log.error("Failed to launch brew upgrade: \(String(describing: error))")
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(brewUpgradeCommand, forType: .string)
         }
     }
 
