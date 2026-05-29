@@ -33,6 +33,8 @@ struct MenuBarContent: View {
         }
     }
 
+    private static let repoURL = URL(string: "https://github.com/ivalkou/rapidkey")!
+
     private static func showAbout() {
         let info = Bundle.main.infoDictionary
         let version = info?["CFBundleShortVersionString"] as? String ?? "?"
@@ -46,6 +48,8 @@ struct MenuBarContent: View {
             defined in ~/.config/rapidkey/rapidkey.toml. \
             See ~/.config/rapidkey/example.toml for full configuration reference.
 
+            \(repoURL.absoluteString)
+
             Author: Ivan Valkou
             """
         alert.alertStyle = .informational
@@ -53,7 +57,10 @@ struct MenuBarContent: View {
             alert.icon = icon
         }
         alert.addButton(withTitle: "OK")
+        alert.addButton(withTitle: "GitHub")
         NSApp.activate(ignoringOtherApps: true)
-        alert.runModal()
+        if alert.runModal() == .alertSecondButtonReturn {
+            NSWorkspace.shared.open(repoURL)
+        }
     }
 }

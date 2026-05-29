@@ -173,15 +173,7 @@ A group key (e.g. `"f"`) must have bindings under that prefix (e.g. `"f h"`, `"f
 
 ### Edit config
 
-The default `"x e"` binding uses `open -t`, which opens the file in the associated text editor (often TextEdit). To use **nvim**, MacVim, VS Code, or `$EDITOR`, replace the `run` value in your config:
-
-```toml
-"x e" = { title = "Edit Config", run = "nvim ~/.config/rapidkey/rapidkey.toml" }
-"x e" = { title = "Edit Config", run = "open -a MacVim ~/.config/rapidkey/rapidkey.toml" }
-"x e" = { title = "Edit Config", run = "\"$EDITOR\" ~/.config/rapidkey/rapidkey.toml" }
-```
-
-The `$EDITOR` form works when your configured [shell](#top-level-options) expands the variable (e.g. from your login profile).
+The default `"x e"` binding uses `open -t`, which opens the file in the associated text editor (often TextEdit). Replace the `run` value in your config if you prefer a different GUI editor.
 
 ### Running apps (built-in)
 
@@ -209,9 +201,10 @@ RapidKey/
   App/                      Entry point, menu bar, AppDelegate
   Models/                   Config, Action, Leader, palette models
   Services/                 Config load/watch, hotkeys, shell execution
+  Services/Config/          TOML leader/parse helpers
   Features/CommandPalette/  Command palette UI and state
   UI/                       Floating panels, design tokens, key catcher
-  Resources/                Bundled default and example TOML templates
+  Resources/                Bundled default config template (config-body.toml)
 ```
 
 ## License

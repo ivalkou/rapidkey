@@ -75,13 +75,11 @@ double_tap_cooldown_ms = 500
 
 # Group "w" — URLs.
 "w g" = { title = "Google", url = "https://www.google.com" }
-"w c" = { title = "GitHub", url = "https://github.com" }
+"w c" = { title = "RapidKey on GitHub", url = "https://github.com/ivalkou/rapidkey" }
 
 # Group "x" — config maintenance.
-# Edit Config: open -t uses the default text editor (often TextEdit). For nvim or another editor, replace run:
-#   run = "nvim ~/.config/rapidkey/rapidkey.toml"
-#   run = "open -a MacVim ~/.config/rapidkey/rapidkey.toml"
-#   run = "\"$EDITOR\" ~/.config/rapidkey/rapidkey.toml"   # if shell expands $EDITOR
+# Edit Config: open -t opens the file in the default text editor (often TextEdit).
+# Replace run with a command for your preferred GUI editor if needed.
 "x e" = { title = "Edit Config",             run = "open -t ~/.config/rapidkey/rapidkey.toml" }
 "x r" = { title = "Open Example",            run = "open -t ~/.config/rapidkey/example.toml" }
 "x d" = { title = "Reset Config to Default", run = "rm ~/.config/rapidkey/rapidkey.toml", confirm = "Delete rapidkey.toml?" }
