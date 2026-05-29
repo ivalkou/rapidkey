@@ -50,18 +50,18 @@ final class UpdateChecker: ObservableObject {
 
     private var checkTask: Task<Void, Never>?
 
-    func check() {
+    func check(manual: Bool = false) {
         guard status != .checking else { return }
 
         checkTask?.cancel()
         status = .checking
 
         checkTask = Task { [weak self] in
-            await self?.performCheck()
+            await self?.performCheck(manual: manual)
         }
     }
 
-    private func performCheck() async {
+    private func performCheck(manual: Bool) async {
         do {
             var request = URLRequest(url: Self.latestReleaseURL)
             request.setValue("application/vnd.github+json", forHTTPHeaderField: "Accept")
@@ -90,6 +90,9 @@ final class UpdateChecker: ObservableObject {
                 status = .updateAvailable(version: normalizeVersion(latestVersion), url: url)
             } else {
                 status = .upToDate
+                if manual {
+                    Self.presentUpToDateAlert(currentVersion: currentVersion)
+                }
             }
         } catch {
             guard !Task.isCancelled else { return }
@@ -102,6 +105,19 @@ final class UpdateChecker: ObservableObject {
         guard case .updateAvailable(let version, let url) = status else { return }
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
         Self.presentUpdateAlert(version: version, currentVersion: currentVersion, url: url)
+    }
+
+    private static func presentUpToDateAlert(currentVersion: String) {
+        let alert = NSAlert()
+        alert.messageText = "You're up to date"
+        alert.informativeText = "RapidKey v\(currentVersion) is the latest version."
+        alert.alertStyle = .informational
+        if let icon = NSApp.applicationIconImage {
+            alert.icon = icon
+        }
+        alert.addButton(withTitle: "OK")
+        NSApp.activate(ignoringOtherApps: true)
+        alert.runModal()
     }
 
     private static func presentUpdateAlert(version: String, currentVersion: String, url: URL) {

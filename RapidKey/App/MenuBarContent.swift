@@ -28,7 +28,7 @@ struct MenuBarContent: View {
         updateStatusSection
 
         Button("Check for Updates…") {
-            updateChecker.check()
+            updateChecker.check(manual: true)
         }
         .disabled(updateChecker.status == .checking)
 
@@ -53,13 +53,10 @@ struct MenuBarContent: View {
         case .checking:
             Button("Checking for Updates…") {}
                 .disabled(true)
-        case .upToDate:
-            Button("RapidKey is up to date") {}
-                .disabled(true)
         case .failed:
             Button("Update check failed") {}
                 .disabled(true)
-        case .idle:
+        case .upToDate, .idle:
             EmptyView()
         }
     }
