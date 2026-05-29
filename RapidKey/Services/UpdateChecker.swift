@@ -101,10 +101,16 @@ final class UpdateChecker: ObservableObject {
         }
     }
 
-    func presentUpdateAlertIfAvailable() {
+    func presentUpdateAlertIfAvailable(shellPath: String, panel: PanelConfig) {
         guard case .updateAvailable(let version, let url) = status else { return }
         let currentVersion = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String ?? "?"
-        Self.presentUpdateAlert(version: version, currentVersion: currentVersion, url: url)
+        Self.presentUpdateAlert(
+            version: version,
+            currentVersion: currentVersion,
+            url: url,
+            shellPath: shellPath,
+            panel: panel
+        )
     }
 
     private static func presentUpToDateAlert(currentVersion: String) {
@@ -120,7 +126,13 @@ final class UpdateChecker: ObservableObject {
         alert.runModal()
     }
 
-    private static func presentUpdateAlert(version: String, currentVersion: String, url: URL) {
+    private static func presentUpdateAlert(
+        version: String,
+        currentVersion: String,
+        url: URL,
+        shellPath: String,
+        panel: PanelConfig
+    ) {
         let alert = NSAlert()
         alert.messageText = "Update Available: v\(version)"
         alert.informativeText = """
@@ -141,29 +153,13 @@ final class UpdateChecker: ObservableObject {
         case .alertSecondButtonReturn:
             NSWorkspace.shared.open(url)
         case .alertThirdButtonReturn:
-            runBrewUpgradeInTerminal()
+            ShellExecutor.runDetached(
+                command: brewUpgradeCommand,
+                shellPath: shellPath,
+                panel: panel
+            )
         default:
             break
-        }
-    }
-
-    private static func runBrewUpgradeInTerminal() {
-        let command = brewUpgradeCommand
-        let escaped = command
-            .replacingOccurrences(of: "\\", with: "\\\\")
-            .replacingOccurrences(of: "\"", with: "\\\"")
-        let script = """
-            tell application "Terminal"
-                activate
-                do script "\(escaped)"
-            end tell
-            """
-        var error: NSDictionary?
-        NSAppleScript(source: script)?.executeAndReturnError(&error)
-        if error != nil {
-            log.error("Failed to open Terminal for brew upgrade")
-            NSPasteboard.general.clearContents()
-            NSPasteboard.general.setString(command, forType: .string)
         }
     }
 
