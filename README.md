@@ -12,6 +12,18 @@ Inspired by the [which-key](https://github.com/folke/which-key.nvim) plugin in [
 
 ![RapidKey command output panel](screenshots/command_output.png)
 
+## Table of Contents
+
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Installation](#installation)
+- [Usage](#usage)
+- [Configuration](#configuration)
+- [Permissions](#permissions)
+- [Building from source](#building-from-source)
+- [Project layout](#project-layout)
+- [License & Author](#license--author)
+
 ## Features
 
 - Global **leader** hotkey opens a command palette
@@ -25,14 +37,28 @@ Inspired by the [which-key](https://github.com/folke/which-key.nvim) plugin in [
   - **Chord** — e.g. `alt+space` (no extra permissions)
   - **Double-tap modifier** — e.g. `doubletap+ctrl` (requires Input Monitoring)
 
-## Requirements
+## Quick Start
 
-- macOS **15.6** or later (Apple Silicon)
-- Xcode (Swift 5; uses [TOMLKit](https://github.com/LebJe/TOMLKit) via Swift Package Manager)
+1. **Install** via Homebrew:
+
+   ```bash
+   brew install --cask ivalkou/tap/rapidkey
+   ```
+
+2. **Launch** RapidKey from `/Applications`. On first run it creates `~/.config/rapidkey/rapidkey.toml` with example bindings. If your leader uses a double-tap modifier, grant **Input Monitoring** when prompted (see [Permissions](#permissions)).
+
+3. **Press the leader hotkey** (default: `alt+space`) to open the palette, then type a key sequence to run an action. See [Usage](#usage) for palette navigation and [Configuration](#configuration) to customize bindings.
 
 ## Installation
 
-Install via Homebrew to get updates (preferred):
+### Requirements
+
+- macOS **15.6** or later (Apple Silicon)
+- Xcode (Swift 5; uses [TOMLKit](https://github.com/LebJe/TOMLKit) via Swift Package Manager) — only needed to [build from source](#building-from-source)
+
+### Homebrew (preferred)
+
+Install via Homebrew to get updates:
 
 ```bash
 brew install --cask ivalkou/tap/rapidkey
@@ -44,6 +70,8 @@ Install a specific version:
 brew install --cask ivalkou/tap/rapidkey@0.1.0
 ```
 
+### Manual install
+
 > **Note:** RapidKey is not notarized. Notarization is Apple's process for approving binaries before distribution. The Homebrew cask removes the `com.apple.quarantine` attribute on install, so the app should run without the "Apple cannot check … for malicious software" warning.
 >
 > For a manual install from [Releases](https://github.com/ivalkou/rapidkey/releases), unpack the zip, move `RapidKey.app` to `/Applications`, then if Gatekeeper blocks launch:
@@ -52,38 +80,38 @@ brew install --cask ivalkou/tap/rapidkey@0.1.0
 > xattr -d com.apple.quarantine /Applications/RapidKey.app
 > ```
 
-## Build and run
+## Usage
 
-### Xcode
-
-1. Open `RapidKey.xcodeproj`
-2. Select the **RapidKey** scheme
-3. Run (⌘R)
-
-### Command line
-
-```bash
-xcodebuild -project RapidKey.xcodeproj -scheme RapidKey -configuration Release -derivedDataPath build build
-open build/Build/Products/Release/RapidKey.app
-```
-
-The `build/` directory is gitignored.
-
-Maintainers: see [dev-docs/releasing.md](dev-docs/releasing.md) for publishing releases and Homebrew tap updates.
-
-## First launch
+### First launch
 
 On first run, RapidKey creates `~/.config/rapidkey/` and writes a fully documented `rapidkey.toml` with example bindings. On every launch it also writes `example.toml` in the same folder — the same reference content (not used by the app; edits are overwritten on the next launch).
+
+Edit `rapidkey.toml` in any text editor; changes are picked up automatically after you save (debounced file watcher).
+
+### Menu bar
 
 Use the menu bar item to:
 
 - **Show [leader]** — open the command palette
-- **Palette keys** — at the **root**, **Space** opens the running-apps branch; **Backspace** steps back one level in config groups or returns from running apps to the root (no effect at the root); **Esc** closes the palette
 - **Open Config Folder** — open the config directory in Finder
 - **Grant Input Monitoring…** — shown when the leader is `doubletap+…` and permission is missing
 - **Quit** — exit the app
 
-Edit `rapidkey.toml` in any text editor; changes are picked up automatically after you save (debounced file watcher).
+### Palette keys
+
+- **Space** (at the **root**) — open the running-apps branch (see below)
+- **Backspace** — step back one level in config groups, or return from running apps to the root (no effect at the root)
+- **Esc** — close the palette
+
+### Running apps (built-in)
+
+At the **root** of the palette, **Space** opens a dynamic list of running GUI applications. The list is a snapshot taken when you enter the branch:
+
+- **Order** — frontmost app first, then the rest sorted by name
+- **Hotkeys** — `1` through `9`, `0`, then `a` through `z` (up to 36 apps; extras are omitted)
+- **Action** — activates the selected app and closes the palette
+
+**Space** is reserved for this branch at the root; a root-level binding `"space"` in `[bindings]` will not be reachable. This branch is not configurable via TOML in v1.
 
 ## Configuration
 
@@ -175,16 +203,6 @@ A group key (e.g. `"f"`) must have bindings under that prefix (e.g. `"f h"`, `"f
 
 The default `"x e"` binding uses `open -t`, which opens the file in the associated text editor (often TextEdit). Replace the `run` value in your config if you prefer a different GUI editor.
 
-### Running apps (built-in)
-
-At the **root** of the palette, **Space** opens a dynamic list of running GUI applications. The list is a snapshot taken when you enter the branch:
-
-- **Order** — frontmost app first, then the rest sorted by name
-- **Hotkeys** — `1` through `9`, `0`, then `a` through `z` (up to 36 apps; extras are omitted)
-- **Action** — activates the selected app and closes the palette
-
-**Space** is reserved for this branch at the root; a root-level binding `"space"` in `[bindings]` will not be reachable. This branch is not configurable via TOML in v1.
-
 ## Permissions
 
 | Leader type | Permission |
@@ -193,6 +211,25 @@ At the **root** of the palette, **Space** opens a dynamic list of running GUI ap
 | Double-tap modifier | **Input Monitoring** — System Settings → Privacy & Security → Input Monitoring → enable RapidKey |
 
 If Input Monitoring is required but not granted, the leader will not fire. Use **Grant Input Monitoring…** in the menu bar to open the permission dialog again.
+
+## Building from source
+
+### Xcode
+
+1. Open `RapidKey.xcodeproj`
+2. Select the **RapidKey** scheme
+3. Run (⌘R)
+
+### Command line
+
+```bash
+xcodebuild -project RapidKey.xcodeproj -scheme RapidKey -configuration Release -derivedDataPath build build
+open build/Build/Products/Release/RapidKey.app
+```
+
+The `build/` directory is gitignored.
+
+Maintainers: see [dev-docs/releasing.md](dev-docs/releasing.md) for publishing releases and Homebrew tap updates.
 
 ## Project layout
 
@@ -207,12 +244,10 @@ RapidKey/
   Resources/                Bundled default config template (config-body.toml)
 ```
 
-## License
+## License & Author
 
 MIT License — see [LICENSE](LICENSE).
 
 Copyright © 2026 Ivan Valkou
-
-## Author
 
 Ivan Valkou
