@@ -27,6 +27,9 @@ leader = "alt+space"
 # Start RapidKey when you log in (uncomment to enable).
 # launch_at_login = true
 
+# How often (in hours) to check GitHub for new RapidKey releases. 0 = never. Default 24.
+# check_for_updates = 24
+
 # Where the command palette and command output panel appear on screen.
 [panel]
 position = "center"   # center | cursor | top | bottom

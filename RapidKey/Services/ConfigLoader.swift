@@ -471,6 +471,27 @@ enum ConfigLoader {
         return b
     }
 
+    private static func parseUpdateCheckInterval(_ root: TOMLTable, source: String) throws -> TimeInterval? {
+        guard let conv = root["check_for_updates"] else { return 24 * 3600 }
+        guard conv.type == .int, let hours = conv.int else {
+            let ln = ConfigParseSupport.lineForKeyAssignment("check_for_updates", in: source)
+            throw ConfigParseSupport.makeError(
+                code: 55,
+                detail: "check_for_updates must be an integer (hours).",
+                line: ln
+            )
+        }
+        guard hours >= 0 else {
+            let ln = ConfigParseSupport.lineForKeyAssignment("check_for_updates", in: source)
+            throw ConfigParseSupport.makeError(
+                code: 56,
+                detail: "check_for_updates cannot be negative.",
+                line: ln
+            )
+        }
+        return hours == 0 ? nil : TimeInterval(hours) * 3600
+    }
+
     private static func parseConfigFromTOML(_ root: TOMLTable, source: String) throws -> Config {
         guard let leaderStr = root["leader"]?.string, !leaderStr.isEmpty else {
             let ln = ConfigParseSupport.lineForKeyAssignment("leader", in: source)
@@ -541,6 +562,7 @@ enum ConfigLoader {
         }
 
         let launchAtLogin = try parseLaunchAtLogin(root, source: source)
+        let updateCheckInterval = try parseUpdateCheckInterval(root, source: source)
         let shellPath = try parseShell(root, source: source)
 
         return Config(
@@ -550,6 +572,7 @@ enum ConfigLoader {
             panel: panel,
             behavior: behavior,
             launchAtLogin: launchAtLogin,
+            updateCheckInterval: updateCheckInterval,
             shellPath: shellPath
         )
     }

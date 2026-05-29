@@ -4,9 +4,11 @@ import Foundation
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     let configStore = ConfigStore()
+    let updateChecker = UpdateChecker()
     private lazy var panelController = PanelController(configStore: configStore)
     private var hotkeyManager: HotkeyManager?
     private var cancellables = Set<AnyCancellable>()
+    private var updateCheckTimer: Timer?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         let hk = HotkeyManager()
@@ -25,9 +27,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         configStore.$config
             .receive(on: DispatchQueue.main)
-            .sink { [weak hk] (config: Config) in
+            .sink { [weak self, weak hk] (config: Config) in
                 hk?.apply(config: config)
                 LaunchAtLoginService.apply(config.launchAtLogin)
+                self?.applyUpdateCheckSchedule(interval: config.updateCheckInterval)
             }
             .store(in: &cancellables)
 
@@ -37,6 +40,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             queue: .main
         ) { [weak self] _ in
             self?.reapplyLeaderIfNeeded()
+        }
+    }
+
+    private func applyUpdateCheckSchedule(interval: TimeInterval?) {
+        updateCheckTimer?.invalidate()
+        updateCheckTimer = nil
+
+        guard let interval else { return }
+
+        updateChecker.check()
+
+        updateCheckTimer = Timer.scheduledTimer(withTimeInterval: interval, repeats: true) { [weak self] _ in
+            self?.updateChecker.check()
         }
     }
 

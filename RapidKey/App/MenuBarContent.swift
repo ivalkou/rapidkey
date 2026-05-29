@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuBarContent: View {
     let appDelegate: AppDelegate
     @ObservedObject var configStore: ConfigStore
+    @ObservedObject var updateChecker: UpdateChecker
 
     var body: some View {
         Button("Show [\(configStore.config.leader.displayString)]") {
@@ -24,12 +25,42 @@ struct MenuBarContent: View {
 
         Divider()
 
+        updateStatusSection
+
+        Button("Check for Updates…") {
+            updateChecker.check()
+        }
+        .disabled(updateChecker.status == .checking)
+
+        Divider()
+
         Button("About RapidKey") {
             Self.showAbout()
         }
 
         Button("Quit") {
             NSApplication.shared.terminate(nil)
+        }
+    }
+
+    @ViewBuilder
+    private var updateStatusSection: some View {
+        switch updateChecker.status {
+        case .updateAvailable(let version, _):
+            Button("Update Available: v\(version)") {
+                updateChecker.presentUpdateAlertIfAvailable()
+            }
+        case .checking:
+            Button("Checking for Updates…") {}
+                .disabled(true)
+        case .upToDate:
+            Button("RapidKey is up to date") {}
+                .disabled(true)
+        case .failed:
+            Button("Update check failed") {}
+                .disabled(true)
+        case .idle:
+            EmptyView()
         }
     }
 

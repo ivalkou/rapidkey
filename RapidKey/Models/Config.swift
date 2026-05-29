@@ -31,6 +31,8 @@ struct Config: Equatable {
     let panel: PanelConfig
     let behavior: BehaviorConfig
     let launchAtLogin: Bool
+    /// How often to auto-check GitHub for updates; `nil` = disabled.
+    let updateCheckInterval: TimeInterval?
     /// Resolved absolute path to the shell executable for `run` commands.
     let shellPath: String
 
@@ -41,6 +43,7 @@ struct Config: Equatable {
         panel: PanelConfig = PanelConfig(),
         behavior: BehaviorConfig = BehaviorConfig(),
         launchAtLogin: Bool = false,
+        updateCheckInterval: TimeInterval? = 24 * 3600,
         shellPath: String = "/bin/sh"
     ) {
         self.leader = leader
@@ -49,6 +52,7 @@ struct Config: Equatable {
         self.panel = panel
         self.behavior = behavior
         self.launchAtLogin = launchAtLogin
+        self.updateCheckInterval = updateCheckInterval
         self.shellPath = shellPath
     }
 }

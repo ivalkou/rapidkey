@@ -128,14 +128,6 @@
 		};
 /* End PBXNativeTarget section */
 
-/* Begin PBXTargetDependency section */
-		381E904E2FB4C7000038336A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 380E80262FB4C6F90038336A /* RapidKey */;
-			targetProxy = 381E904F2FB4C7000038336A /* PBXContainerItemProxy */;
-		};
-/* End PBXTargetDependency section */
-
 /* Begin PBXProject section */
 		380E801F2FB4C6F90038336A /* Project object */ = {
 			isa = PBXProject;
@@ -202,6 +194,14 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		381E904E2FB4C7000038336A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 380E80262FB4C6F90038336A /* RapidKey */;
+			targetProxy = 381E904F2FB4C7000038336A /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		380E80302FB4C6FA0038336A /* Debug */ = {
