@@ -28,9 +28,10 @@ final class ShellResultSession: ObservableObject {
     @Published var launchError: String?
     @Published var style: ShellResultPayload.Style = .output
 
+    @Published private(set) var didTruncateHead = false
+
     var onCancel: (() -> Void)?
 
-    private var totalLength = 0
     private var pendingStdout = ""
     private var pendingStderr = ""
     private var coalesceTask: Task<Void, Never>?
@@ -50,10 +51,7 @@ final class ShellResultSession: ObservableObject {
         session.exitCode = payload.exitCode
         session.launchError = payload.launchError
         session.style = payload.style
-        session.totalLength = min(
-            payload.stdout.count + payload.stderr.count + (payload.launchError?.count ?? 0),
-            outputLimit
-        )
+        session.trimToLimit()
         return session
     }
 
@@ -73,11 +71,9 @@ final class ShellResultSession: ObservableObject {
 
     private func enqueue(_ chunk: String, into pending: inout String) {
         let cleaned = TerminalOutputSanitizer.strippingANSI(chunk)
-        guard !cleaned.isEmpty, totalLength < Self.outputLimit else { return }
-        let remaining = Self.outputLimit - totalLength
-        let slice = cleaned.count > remaining ? String(cleaned.prefix(remaining)) : cleaned
-        pending += slice
-        totalLength += slice.count
+        guard !cleaned.isEmpty else { return }
+
+        pending += cleaned
         scheduleCoalescedFlush()
     }
 
@@ -104,8 +100,34 @@ final class ShellResultSession: ObservableObject {
             changed = true
         }
         if changed {
+            trimToLimit()
             outputGeneration += 1
         }
+    }
+
+    /// Build tools print failures at the end, while the first kilobytes are just a header,
+    /// so an overflowing log has to lose its head, not its tail.
+    private func trimToLimit() {
+        var overflow = stdout.count + stderr.count - Self.outputLimit
+        guard overflow > 0 else { return }
+
+        if !stdout.isEmpty {
+            let cut = min(overflow, stdout.count)
+            stdout = Self.droppingLeadingPartialLine(from: stdout, by: cut)
+            overflow -= cut
+        }
+        if overflow > 0, !stderr.isEmpty {
+            stderr = Self.droppingLeadingPartialLine(from: stderr, by: min(overflow, stderr.count))
+        }
+
+        didTruncateHead = true
+    }
+
+    private static func droppingLeadingPartialLine(from text: String, by count: Int) -> String {
+        let remainder = String(text.dropFirst(count))
+        guard let lineBreak = remainder.firstIndex(of: "\n") else { return remainder }
+
+        return String(remainder[remainder.index(after: lineBreak)...])
     }
 
     func requestCancel() {
@@ -151,8 +173,6 @@ final class ShellResultSession: ObservableObject {
             parts.append(out.isEmpty ? err : "--- stderr ---\n\(err)")
         }
         let joined = parts.joined(separator: "\n\n")
-        return joined.count > Self.outputLimit
-            ? String(joined.prefix(Self.outputLimit)) + "\n…"
-            : joined
+        return didTruncateHead ? "…\n" + joined : joined
     }
 }
